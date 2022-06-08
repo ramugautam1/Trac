@@ -75,5 +75,4 @@ def prepare():
             sliceB.save(tifname2)
 
     del sliceB, slice2, slice1, sliceA, originalImage, originalImageFloat32  # clear; free up some memory
-
     ####################################################################################################################
