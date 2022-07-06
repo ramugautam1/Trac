@@ -3,7 +3,7 @@
 %-------------------------------------------------------------------------------------------------------------------%
 %% step1: process the segmentation results to tracking candidates
 clear
-load('C:\my3D_matlab\colormap.mat','map')
+load('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat','map')
 % t1=[2, 29, 30];
 t1=1;
 t2=42;
@@ -13,8 +13,8 @@ I3d=[32,35,I3dw(3)];
 for time=t1:t2
     disp(time)
     tt=num2str(time);
-    addr=strcat('D:\NEW\Prediction_Result_Ajuba_09\Prediction_Dataset_Ajuba_sqh-cherry_jub-gfp 18A-09\FC-DenseNet\',tt,'\');
-    addr2=strcat('D:\NEW\Recombined_18A-09\',tt,'\');
+    addr=strcat('/home/nirvan/Desktop/Projects/allFiles/Prediction_Dataset_Ajuba_sqh-cherry_jub-gfp 18A-09/FC-DenseNet/',tt,'/');
+    addr2=strcat('/home/nirvan/Desktop/Projects/allFiles/',tt,'/');
     if ~exist(addr2,'dir')
         mkdir(addr2);
     end
