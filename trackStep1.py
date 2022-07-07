@@ -103,12 +103,12 @@ def trackStep1():
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
-        for it in range(0, np.size(Fullsize,2)):
-            img = Fullsize2[:,:,it]
-            f = measure.label(img)
-            orgnum = f.max()
-            print(f'{f} {orgnum}')
-            g = measure.regionprops(f, 'area')
+        # for it in range(0, np.size(Fullsize,2)):
+        #     img = Fullsize2[:,:,it]
+        #     f = measure.label(img)
+        #     orgnum = f.max()
+        #     print(f'{f} {orgnum}')
+        #     g = measure.regionprops(f, 'area')
         #     print('--0--00-0-0-0-0-0-0-0-0-0-0---0-0-0-0-0-0')
         #     print(g)
         #     print('--0--00-0-0-0-0-0-0-0-0-0-0---0-0-0-0-0-0')
@@ -119,7 +119,7 @@ def trackStep1():
         plt.plot()
         plt.show()
 
-        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 10))
+        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 5))
         print(Fullsize2)
 
         plt.imshow(Fullsize2[:, :, 8])
@@ -139,22 +139,19 @@ def trackStep1():
         z = np.size(Fullsize,2)
 
         stack_after_BW = stack_after.astype(bool)
-
         stack_after_label, orgnum = measure.label(stack_after_BW, connectivity=1, return_num=True)
         # orgnum = stack_after_label.max()
         print(f'--------xxxx--------xxxx--------{orgnum}')
-
         stats = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
+        print(pd.DataFrame(stats))
 
-
-
-
-        print(f'{f} {orgnum}')
-        stats = measure.regionprops(stack_after_label)
-        print('--0--00-0-0-0-0-0-0-0-0-0-0---0-0-0-0-0-0')
-        print(g)
-        print('--0--00-0-0-0-0-0-0-0-0-0-0---0-0-0-0-0-0')
-
+        stack_after_label, orgnum = measure.label(stack_after, connectivity=1, return_num=True)
+        print(f'------{orgnum}')
+        stats1 = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
+        print(pd.DataFrame(stats1))
+        print(orgnum)
+        nib.save(nib.Nifti1Image(np.uint32(stack_after_label),affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
+        # new_image = nib.Nifti1Image(data, affine=np.eye(4))
         stop
 
 
