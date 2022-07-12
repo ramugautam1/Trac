@@ -15,33 +15,34 @@ from skimage import measure
 from skimage import morphology
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
+import cc3d
 
 
+def niftiwrite(a,b):
+    nib.save(nib.Nifti1Image(np.uint32(a),affine=np.eye(4)),b);
+def line(a):
+    return a*50
 
 def trackStep1():
-    # if __name__ == '__main__':
     colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
-    t1 = 1;
+    t1 = 1
     t2 = 41;
-
+    # t2 = 1
     # size of image, size of cuboids
     I3dw = [512, 280, 15]
     I3d = [32, 35, I3dw[2]]
-    print(I3d[2])
     # for time in range(t1 - 1, t2):
     for time in range(t1, t2 + 1):
-        print(time)
         tt = str(time)
-
-        addr = '/home/nirvan/Desktop/Projects/allFiles/Prediction_Dataset_Ajuba_sqh-cherry_jub-gfp 18A-09/FC-DenseNet/'+str(time) + '/'
+        addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
         print(addr)
-        addr2 = '/home/nirvan/Desktop/Projects/allFiles/' + str(time) + '/'
+        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/' + str(time) + '/'
         print(addr2)
 
         if not os.path.isdir(addr2):
             os.makedirs(addr2)
         Files1 = sorted(glob.glob(addr + '*.nii'))
-        print(Files1)
+        # print(Files1)
         Fullsize = np.zeros(shape=(512, 280, 15))
         Fullsize_regression = np.zeros(shape=(512, 280, 15))
         Fullsize_input = np.zeros(shape=(512, 280, 15))
@@ -49,88 +50,56 @@ def trackStep1():
 
         c_file = 0
 
-        for i1 in range(0, I3dw[0] - I3d[0], I3d[0]):
-            for i2 in range(0, I3dw[1] - I3d[1], I3d[1]):
-                # V = nib.load(Files1[c_file])
-                # V = 1 - V
-                # V2 = np.uint8(V * 255)
-                # V3 = resize(V2, I3d, order=1)
+        for i1 in range(0, I3dw[0], I3d[0]):
+            for i2 in range(0, I3dw[1], I3d[1]):
+
                 V_arr = np.asarray(nib.load(Files1[c_file]).dataobj).astype(np.float32).squeeze()
-
-                print(np.shape(V_arr))
-
                 V_arr = 1 - V_arr
                 V2_arr = np.uint8(V_arr * 255)
-                V3_arr = resize(V2_arr, I3d, order=1)
-                print(np.shape(V3_arr))
+                V3_arr = resize(V2_arr, I3d, order=0)
 
                 a = i1
                 b = i1 + I3d[0]
                 c = i2
                 d = i2 + I3d[1]
 
-                print(f'a {a}')
-                print(f'b {b}')
-                print(f'c {c}')
-                print(f'd {d}')
+                # print(f'{a}:{b}, {c}:{d}, : ')
 
-
-                # Fullsize[a:b, c:d, :] = V3
                 Fullsize[a:b, c:d, :] = V3_arr
 
-                # V = nib.load(Files1[c_file + 1])
                 V_arr = np.asarray(nib.load(Files1[c_file + 1]).dataobj).astype(np.float32).squeeze()
 
-                print(f'V_arr shape {np.shape(V_arr)}')
                 for iy in range(0, 64):
-                    # print(i2)
-                    del V2_arr, V3_arr
                     V2_arr = np.double(V_arr[:, :, :, iy])
-                    V3_arr = resize(V2_arr, I3d, order=1)
-                    # print(np.shape(V3_arr))
-                    Weights[a:b, c:d, :, iy] = V3_arr
-                    # print(f'----------------- {iy} ')
-                    print(f'{tt}    {i2}   {iy}')
+                    V3_arr = resize(V2_arr, I3d, order=0)
+                    Weights[a:b, c:d, :, iy] = V2_arr
 
-                V_arr = np.asarray(nib.load(Files1[c_file + 2]).dataobj).astype(np.float32).squeeze()
-                V3_arr = resize(V_arr, I3d, order=1)
-                Fullsize_input[a:b, c:d, :] = V3_arr
+                V_arr = np.asarray(nib.load(Files1[c_file + 2]).dataobj)#.astype(np.float32).squeeze()
+                V3_arr = resize(V_arr, I3d, order=0)
+                Fullsize_input[a:b, c:d, :] = V3_arr.squeeze()
                 c_file = c_file + 4
-                print(np.shape(V3_arr))
-
-        print(sum(Weights[:,:,:,:]))
 
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
-
         # for it in range(0, np.size(Fullsize,2)):
         #     img = Fullsize2[:,:,it]
-        #     f = measure.label(img)
-        #     orgnum = f.max()
-        #     print(f'{f} {orgnum}')
-        #     g = measure.regionprops(f, 'area')
-        #     print('--0--00-0-0-0-0-0-0-0-0-0-0---0-0-0-0-0-0')
-        #     print(g)
-        #     print('--0--00-0-0-0-0-0-0-0-0-0-0---0-0-0-0-0-0')
-        #
-        # #
-        plt.imshow(Fullsize2[:,:,8])
-        plt.colorbar()
-        plt.plot()
-        plt.show()
+        #     f,orgnum = measure.label(img, connectivity=2, return_num=True)
+        #     # g = measure.regionprops(f, 'area')
+
+        # plt.imshow(Fullsize2[:,:,8])
+        # plt.colorbar()
+        # plt.plot()
+        # plt.show()
 
         Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 5))
-        print(Fullsize2)
+        # print(Fullsize2)
 
-        plt.imshow(Fullsize2[:, :, 8])
-        plt.colorbar()
-        plt.plot()
-        plt.show()
+        # plt.imshow(Fullsize2[:, :, 8])
+        # plt.colorbar()
+        # plt.plot()
+        # plt.show()
 
-        print(Fullsize2.max())
-        print(measure.label(Fullsize2).max())
-        print("Shape")
-        print(np.shape(Fullsize2))
+        # print(measure.label(Fullsize2).max())
 
         stack_after = Fullsize2
 
@@ -139,24 +108,46 @@ def trackStep1():
         z = np.size(Fullsize,2)
 
         stack_after_BW = stack_after.astype(bool)
-        stack_after_label, orgnum = measure.label(stack_after_BW, connectivity=1, return_num=True)
-        # orgnum = stack_after_label.max()
-        print(f'--------xxxx--------xxxx--------{orgnum}')
-        stats = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
-        print(pd.DataFrame(stats))
 
         stack_after_label, orgnum = measure.label(stack_after, connectivity=1, return_num=True)
-        print(f'------{orgnum}')
-        stats1 = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
-        print(pd.DataFrame(stats1))
-        print(orgnum)
+        CC = cc3d.connected_components(stack_after_label,connectivity=6)
+
+        # stats1 = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
+        stats1 = measure.regionprops_table(CC, properties=('label', 'bbox', 'centroid'))
+
+
+        data = {
+            "VoxelList" : [[[]]]
+        }
+        voxels = pd.DataFrame(data)
+        # print(f'--------------------------{orgnum}')
+        # print(type(voxels.VoxelList[0]))
+        for i1 in range(0,512):
+            for i2 in range(0,280):
+                for i3 in range(0,15):
+                    if CC[i1,i2,i3] != 0 :
+                        for l in range (0,orgnum):
+                            if(CC[i1,i2,i3]==l):
+                                # print(np.asarray([l, i1, i2, i3]))
+                                if(voxels.size<l+1):
+                                    voxels.loc[l-1,'VoxelList'] = np.array([[i1,i2,i3]])
+                                else:
+                                    voxels.loc[l - 1, 'VoxelList'] = np.concatenate(
+                                        (np.array(voxels.VoxelList[l - 1]), np.array([[i1, i2, i3]])), axis=0)
+
+        # print(voxels.VoxelList[0])
+
         nib.save(nib.Nifti1Image(np.uint32(stack_after_label),affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
-        # new_image = nib.Nifti1Image(data, affine=np.eye(4))
-        stop
 
+        niftiwrite(Fullsize2, addr2 + 'Fullsize' + '_' + tt + '.nii')
+        print(tt)
+        print(line('-'))
 
+        #code to save 3d figure
 
+        #
 
+        niftiwrite(Weights, addr2 + 'Weights_' + tt + '.nii')
 
-
-
+    del Fullsize, Fullsize_regression, Fullsize2, Fullsize_input, stats1, \
+        orgnum, stack_after, stack_after_BW, stack_after_label, i1, i2, iy, tt
