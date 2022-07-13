@@ -10,11 +10,11 @@ t2=42;
 %source_data=niftiread(strcat('F:\Mo\gt\Myo-cherry and Aju-GFP 2020.12.21Sample\source\','sqh-cherry_jub-gfp 18A-02.nii'));
 I3dw=[512, 280, 15];%size(source_data);
 I3d=[32,35,I3dw(3)];
-for time=t1:t2
+for time=t1:1
     disp(time)
     tt=num2str(time);
-    addr=strcat('/home/nirvan/Desktop/Projects/allFiles/Prediction_Dataset_Ajuba_sqh-cherry_jub-gfp 18A-09/FC-DenseNet/',tt,'/');
-    addr2=strcat('/home/nirvan/Desktop/Projects/allFiles/',tt,'/');
+    addr=strcat('/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/',tt,'/');
+    addr2=strcat('/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_tr/',tt,'/');
     if ~exist(addr2,'dir')
         mkdir(addr2);
     end
@@ -54,7 +54,9 @@ for time=t1:t2
 
 
     %Remove the small itty-bitty masks
+% % %        niftiwrite(Fullsize,strcat(addr2,'testm','_',tt,'.nii'));
     Fullsize2=logical(Fullsize);
+ 
     for it=1:size(Fullsize,3)
         img=Fullsize2(:,:,it);
         [f,orgnum] = bwlabel(img);
@@ -72,15 +74,21 @@ for time=t1:t2
     [y, x, z] = size(Fullsize);
 
     stack_after_BW=logical(stack_after);
-    [stack_after_label,orgnum]=bwlabeln(Fullsize2);
-    CC = bwconncomp(Fullsize2,6);
-    stats = regionprops3(CC,'BoundingBox','VoxelList','ConvexHull','Centroid','Volume');
-    j=height(stats);
+
+% %     [stack_after_label,orgnum]=bwlabeln(Fullsize2);
+% %     CC = bwconncomp(Fullsize2,6);
+% %     stats = regionprops3(CC,'BoundingBox','VoxelList','ConvexHull','Centroid','Volume');
+% %     j=height(stats);
+
     [stack_after_label,orgnum]=bwlabeln(stack_after, 6);
     CC = bwconncomp(stack_after,6);
     stats1 = regionprops3(CC,'BoundingBox','VoxelList','ConvexHull','Centroid');
 %     %stack_after(stack_after==0)=nan;
-    niftiwrite(stack_after_label,strcat(addr2,'Fullsize_label','_',tt,'.nii'));
+
+% % %     niftiwrite(stack_after_label,strcat(addr2,'Fullsize_labelx','_',tt,'.nii'));
+
+    disp(stats1(:,:))
+
 
     for i=1:height(stats1)
         b=stats1.VoxelList{i,1};
@@ -89,7 +97,7 @@ for time=t1:t2
             stack_after_label(stack_after_label(b(i1,2),b(i1,1),b(i1,3))>0)=i;
         end
     end
-
+%----------------------
     stack_after_label(stack_after_label==0)=nan;
     h=figure;
     [X,Y,Z] = ndgrid(1:size(stack_after_label,1), 1:size(stack_after_label,2), 1:size(stack_after_label,3));
@@ -100,9 +108,6 @@ for time=t1:t2
     colorbar;
     hold on
     grid on
-
-
-
 
     for i=1:height(stats1)
 
@@ -129,14 +134,21 @@ for time=t1:t2
     xlim([0 280]);
     ylim([0 512]);
     zlim([0 15]);
+%------------------
 
-    niftiwrite(Fullsize2,strcat(addr2,'Fullsize','_',tt,'.nii'));
+% % %     niftiwrite(Fullsize2,strcat(addr2,'Fullsizex','_',tt,'.nii'));
+
+    
 %     niftiwrite(stack_after_label,strcat(addr2,'Fullsize_label','_',tt,'.nii'));
-    niftiwrite(Registration,strcat(addr2,'Registration','_',tt,'.nii'));
+
+% % %     niftiwrite(Registration,strcat(addr2,'Registration','_',tt,'.nii'));
+
 %    niftiwrite(Fullsize_regression,strcat(addr2,'Fullsize_regression','_',tt,'.nii'));
-    niftiwrite(Weights,strcat(addr2,'Weights','_',tt,'.nii'));
-    savefig(h,strcat(addr2,tt,'_3Dconnection2.fig'));
-    saveas(h,strcat(addr2,tt,'_3Dconnection2.png'))
+% % %     niftiwrite(Weights,strcat(addr2,'Weights','_',tt,'.nii'));
+
+% % %     savefig(h,strcat(addr2,tt,'_3Dconnection2.fig'));
+% % %     saveas(h,strcat(addr2,tt,'_3Dconnection2.png'))
     close(h);
+
 end
 disp('finish')
