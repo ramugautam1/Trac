@@ -98,6 +98,28 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                         # corr = convn(Feature_map1,Feature_map2(end:-1:1,end:-1:1,end:-1:1));
 
                         # Flattening the feature map
+                        Feature_map1_flatten = np.concatenate((Feature_map1[0].flatten(order='F'),
+                                                               Feature_map1[1].flatten(order='F'),
+                                                               Feature_map1[2].flatten(order='F')))
+
+                        Feature_map2_flatten = np.concatenate((Feature_map2[0].flatten(order='F'),
+                                                               Feature_map2[1].flatten(order='F'),
+                                                               Feature_map2[2].flatten(order='F')))
+
+                        #calculate correlation
+                        corr = corr2(Feature_map1_flatten, Feature_map2_flatten)
+
+                        if corr>0.2:
+                            b = voxels.VoxelList[i]
+                            a = np.zeros(shape=(1,1))
+                            for i1 in range(0, np.size(b,axis=0)):
+                                # a[i1,0] = Fullsize_1_label[b[i1][1],b[i1][0],b[i1][2]]
+
+
+
+
+
+
 
 
 
