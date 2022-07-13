@@ -7,7 +7,7 @@ disp('start')
 padding=[20, 20, 2]; % the padding on  segmentation for 'extended search', see paper
 time=clock;
 % folder = 'TrackingEcad2020'; % the folder stores the segmentation data for each time point
-folder = 'Recombined_18A-09';
+folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Training_Result/';
 trackbackT=2; % the program support multiple trace back time point.
 
 % ---IF new tracking task, uncomment this part
@@ -66,8 +66,10 @@ for time=startpoint:endpoint
     xlswriter10(1,(time)*2)=cellstr(t2);
     xlswriter11(1,(time)*2)=cellstr(t2);
     xlswriter12(1,(time)*2)=cellstr(t2);
-    addr1=strcat('D:\NEW\',folder,'\',t1,'\');
-    addr2=strcat('D:\NEW\',folder,'\',t2,'\');
+
+    addr1=strcat(folder,t1,'/');
+    addr2=strcat(folder,'/',t2,'/');
+    
     Files1=dir(strcat(addr1,'*.nii'));
     Files2=dir(strcat(addr2,'*.nii'));
 
@@ -99,7 +101,7 @@ for time=startpoint:endpoint
     end
 
 
-    % clear unnecessary variables
+    % clear unnecessary variabldisp(strcat('time point: ', num2str(time)))es
 clear Fullsize_1 Fullsize_regression_1 Fullsize_2 Fullsize_regression_2  Fullsize_1_padding Fullsize_2_padding ...
         Fullsize_regression_1_padding Fullsize_regression_2_padding Fullsize_1_label Fullsize_2_label
 
