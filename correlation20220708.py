@@ -114,24 +114,3 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                             a = np.zeros(shape=(1,1))
                             for i1 in range(0, np.size(b,axis=0)):
                                 # a[i1,0] = Fullsize_1_label[b[i1][1],b[i1][0],b[i1][2]]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
