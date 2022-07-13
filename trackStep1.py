@@ -16,12 +16,8 @@ from skimage import morphology
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 import cc3d
+from functions import niftiwrite, dashline
 
-
-def niftiwrite(a,b):
-    nib.save(nib.Nifti1Image(np.uint32(a),affine=np.eye(4)),b);
-def line(a):
-    return a*50
 
 def trackStep1():
     colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
@@ -117,7 +113,7 @@ def trackStep1():
 
 
         data = {
-            "VoxelList" : [[[]]]
+            "VoxelList":[[[]]]
         }
         voxels = pd.DataFrame(data)
         # print(f'--------------------------{orgnum}')
@@ -141,7 +137,7 @@ def trackStep1():
 
         niftiwrite(Fullsize2, addr2 + 'Fullsize' + '_' + tt + '.nii')
         print(tt)
-        print(line('-'))
+        dashline()
 
         #code to save 3d figure
 
