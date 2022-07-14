@@ -3,8 +3,9 @@ import math
 import numpy as np
 import pandas as pd
 from skimage import measure
+import statistics
 
-from functions import rand, size3
+from functions import rand, size3,niftiwrite, niftiread
 
 
 def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regression_2,
@@ -30,7 +31,7 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
 
     Fullsize_1_label = Fullsize_1_padding
 
-    print(max(max(max(Fullsize_1_padding))))
+    print(np.amax(Fullsize_1_padding))
 
     labelss, orgnum = measure.label(Fullsize_1_padding, connectivity=1, return_num=True)
 
@@ -80,7 +81,11 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
             # all of depth
             # of Fullsize_regression_2_padding
 
-            Feature_map1 = np.copy(Fullsize_regression_1_padding[voxels.VoxelList[i][index][1]-3:voxels.VoxelList[i][index][1]+3, voxels.VoxelList[i][index][0]-3:voxels.VoxelList[i][index][0]+3, voxels.VoxelList[i][index][2]-1:voxels.VoxelList[i][index][2]+1, :])
+            Feature_map1 = Fullsize_regression_1_padding[
+                           voxels.VoxelList[i][index][1]-3:voxels.VoxelList[i][index][1]+3+1,
+                           voxels.VoxelList[i][index][0]-3:voxels.VoxelList[i][index][0]+3+1,
+                           voxels.VoxelList[i][index][2]-1:voxels.VoxelList[i][index][2]+1+1,
+                           :]
 
             for m1 in range(-1, 2):
                 x = 2*m1
@@ -88,7 +93,11 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                     y = 2*m2
                     for m3 in range(-1, 2):
                         z = m3
-                        Feature_map2 = np.copy(Fullsize_regression_2_padding[voxels.VoxelList[i][index][1]-3:voxels.VoxelList[i][index][1]+3, voxels.VoxelList[i][index][0]-3:voxels.VoxelList[i][index][0]+3, voxels.VoxelList[i][index][2]-1:voxels.VoxelList[i][index][2]+1, :])
+                        Feature_map2 = Fullsize_regression_2_padding[
+                                       voxels.VoxelList[i][index][1]-3:voxels.VoxelList[i][index][1]+3+1,
+                                       voxels.VoxelList[i][index][0]-3:voxels.VoxelList[i][index][0]+3+1,
+                                       voxels.VoxelList[i][index][2]-1:voxels.VoxelList[i][index][2]+1+1,
+                                       :]
 
                         # *****************
                         # ---uncomment if the extended search decay is wanted
@@ -97,20 +106,67 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                         # Feature_map2=Feature_map2/mean2(Feature_map2);
                         # corr = convn(Feature_map1,Feature_map2(end:-1:1,end:-1:1,end:-1:1));
 
-                        # Flattening the feature map
-                        Feature_map1_flatten = np.concatenate((Feature_map1[0].flatten(order='F'),
-                                                               Feature_map1[1].flatten(order='F'),
-                                                               Feature_map1[2].flatten(order='F')))
-
-                        Feature_map2_flatten = np.concatenate((Feature_map2[0].flatten(order='F'),
-                                                               Feature_map2[1].flatten(order='F'),
-                                                               Feature_map2[2].flatten(order='F')))
+                        # # Flattening the feature map
+                        # Feature_map1_flatten = np.concatenate((Feature_map1[0].flatten(order='F'),
+                        #                                        Feature_map1[1].flatten(order='F'),
+                        #                                        Feature_map1[2].flatten(order='F')))
+                        #
+                        # Feature_map2_flatten = np.concatenate((Feature_map2[0].flatten(order='F'),
+                        #                                        Feature_map2[1].flatten(order='F'),
+                        #                                        Feature_map2[2].flatten(order='F')))
+                        Feature_map1_flatten = Feature_map1.flatten(order='F')
+                        Feature_map2_flatten = Feature_map2.flatten(order='F')
 
                         #calculate correlation
-                        corr = corr2(Feature_map1_flatten, Feature_map2_flatten)
+                        corr = np.corrcoef(Feature_map1_flatten, Feature_map2_flatten)[0,1]
 
                         if corr>0.2:
                             b = voxels.VoxelList[i]
                             a = np.zeros(shape=(1,1))
                             for i1 in range(0, np.size(b,axis=0)):
-                                # a[i1,0] = Fullsize_1_label[b[i1][1],b[i1][0],b[i1][2]]
+                                a[i1,0] = Fullsize_1_label[b[i1][1],b[i1][0],b[i1][2]]
+                                value = statistics.mode(a.flatten())
+                                countzero = a.count(0)
+
+                            if countzero > value:
+                                value=0
+
+                            correlation_map_padding_corr_local = correlation_map_padding_corr[
+                                                                 voxels.VoxelList[i][index][1]+x-3:voxels.VoxelList[i][index][1]+x+3+1,
+                                                                 voxels.VoxelList[i][index][0]+y-3:voxels.VoxelList[i][index][0]+y+3+1,
+                                                                 voxels.VoxelList[i][index][1]+z-1:voxels.VoxelList[i][index][1]+x+1+1]
+                            correlation_map_padding_show_local = correlation_map_padding_show[
+                                                                 voxels.VoxelList[i][index][1]+x-3:voxels.VoxelList[i][index][1]+x+3+1,
+                                                                 voxels.VoxelList[i][index][0]+y-3:voxels.VoxelList[i][index][0]+y+3+1,
+                                                                 voxels.VoxelList[i][index][1]+z-1:voxels.VoxelList[i][index][1]+x+1+1]
+
+
+
+
+                            # only select the highest correlation and assign the label
+                            correlation_map_padding_show_local[correlation_map_padding_show_local<corr] = value
+                            correlation_map_padding_corr_local[correlation_map_padding_corr_local<corr] = corr
+
+                            correlation_map_padding_corr[voxels.VoxelList[i][index][1]+x-3:voxels.VoxelList[i][index][1]+x+3+1,
+                                                voxels.VoxelList[i][index][0]+y-3:voxels.VoxelList[i][index][0]+y+3+1,
+                                                voxels.VoxelList[i][index][1]+z-1:voxels.VoxelList[i][index][1]+x+1+1] \
+                                                = correlation_map_padding_corr_local
+
+                            correlation_map_padding_show[voxels.VoxelList[i][index][1]+x-3:voxels.VoxelList[i][index][1]+x+3+1,
+                                                voxels.VoxelList[i][index][0]+y-3:voxels.VoxelList[i][index][0]+y+3+1,
+                                                voxels.VoxelList[i][index][1]+z-1:voxels.VoxelList[i][index][1]+x+1+1] \
+                                                = correlation_map_padding_show_local
+
+
+
+
+    print(np.amax(correlation_map_padding_show))
+    print(addr2 + 'correlation_map_padding_show_traceback' + str(time) + '_' + t2 + '.nii')
+
+    niftiwrite(correlation_map_padding_show,
+               addr2+'correlation_map_padding_show_traceback'+str(time)+'_'+t2 +'.nii')
+
+    niftiwrite(correlation_map_padding_corr,
+               addr2 + 'correlation_map_padding_hide_traceback' + str(time) + '_' + t2 + '.nii')
+
+
