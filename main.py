@@ -5,5 +5,5 @@ from trackStep2 import trackStep2
 
 if __name__ == '__main__':
     # prepare()
-    trackStep1()
+    # trackStep1()
     trackStep2()

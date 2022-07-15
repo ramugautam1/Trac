@@ -19,7 +19,7 @@ def prepare():
     time = 1;
     z = 15;
     originalImageName = 'EcadMyo_08'
-    originalImageAddress = '/home/nirvan/Desktop/Projects/theFiles/'
+    originalImageAddress = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/'
     originalImage = nib.load(originalImageAddress + originalImageName + '.nii')
 
     originalImageFloat32 = np.asarray(originalImage.dataobj).astype(np.float32).squeeze()

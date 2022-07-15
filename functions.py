@@ -7,6 +7,10 @@ def dashline():
     print('---------------------------------------------------------')
 
 
+def starline():
+    print('**********************************************************')
+
+
 def niftiread(arg):
     return np.asarray(nib.load(arg).dataobj).astype(np.float32).squeeze()
 

@@ -32,7 +32,7 @@ def trackStep1():
         tt = str(time)
         addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
         print(addr)
-        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/' + str(time) + '/'
+        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result2/' + str(time) + '/'
         print(addr2)
 
         if not os.path.isdir(addr2):
@@ -122,7 +122,7 @@ def trackStep1():
             for i2 in range(0,280):
                 for i3 in range(0,15):
                     if CC[i1,i2,i3] != 0 :
-                        for l in range (0,orgnum):
+                        for l in range (1,orgnum+1):
                             if(CC[i1,i2,i3]==l):
                                 # print(np.asarray([l, i1, i2, i3]))
                                 if(voxels.size<l+1):
@@ -132,6 +132,8 @@ def trackStep1():
                                         (np.array(voxels.VoxelList[l - 1]), np.array([[i1, i2, i3]])), axis=0)
 
         # print(voxels.VoxelList[0])
+        print(pd.DataFrame(stats1).size)
+        print(voxels.size)
 
         nib.save(nib.Nifti1Image(np.uint32(stack_after_label),affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
 
