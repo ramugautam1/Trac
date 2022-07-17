@@ -143,6 +143,8 @@ def trackStep1():
 
         #code to save 3d figure
 
+
+
         #
 
         niftiwrite(Weights, addr2 + 'Weights_' + tt + '.nii')
