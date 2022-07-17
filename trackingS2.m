@@ -1,6 +1,6 @@
 %% step2: calculating correlation and tracking
 clear
-load('C:\my3D_matlab\colormap.mat','map')
+load('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat','map')
 %source_data=niftiread(strcat('F:\Mo\gt\Myo-cherry and Aju-GFP 2020.12.21Sample\source\','sqh-cherry_jub-gfp 18A-02.nii'));
 I3dw=[512, 280, 15];% the shape of source data. remember to change if source data change. size(source_data);
 disp('start')
@@ -13,13 +13,13 @@ trackbackT=2; % the program support multiple trace back time point.
 % ---IF new tracking task, uncomment this part
 % filename = strcat('D:\NEW\',folder,'\TrackingID',num2str(time),'.xls'); % the excel file name to write the tracking result
 
-filename = strcat('D:\NEW\',folder,'\TrackingID',num2str(time),'.xls'); % the excel file name to write the tracking result
+filename = strcat(folder,'TrackingID',num2str(time),'.xls'); % the excel file name to write the tracking result
 
-xlswrite(filename,cellstr('time'),2, 'A1'); % write titles to the excel
-xlswrite(filename,cellstr('old'),2, 'B1');
-xlswrite(filename,cellstr('new'),2, 'C1');
-xlswrite(filename,cellstr('split'),2, 'D1');
-xlswrite(filename,cellstr('fusion'),2, 'E1');
+xlwrite(filename,cellstr('time'),2, 'A1'); % write titles to the excel
+xlwrite(filename,cellstr('old'),2, 'B1');
+xlwrite(filename,cellstr('new'),2, 'C1');
+xlwrite(filename,cellstr('split'),2, 'D1');
+xlwrite(filename,cellstr('fusion'),2, 'E1');
 
 
 % ---IF continue tracking uncomment this part
@@ -54,18 +54,18 @@ for time=startpoint:endpoint
     disp(strcat('time point: ', num2str(time)))
     t1=num2str(time);
     t2=num2str(time+1);
-    xlswriter1(1,(time)*2-1)=cellstr(t1);%add time point in excel
-    xlswriter1(1,(time)*2)=cellstr(t2);
-    xlswriter3(1,(time)*2)=cellstr(t2);
-    xlswriter4(1,(time)*2)=cellstr(t2);
-    xlswriter5(1,(time)*2)=cellstr(t2);
-    xlswriter6(1,(time)*2)=cellstr(t2);
-    xlswriter7(1,(time)*2)=cellstr(t2);
-    xlswriter8(1,(time)*2)=cellstr(t2);
-    xlswriter9(1,(time)*2)=cellstr(t2);
-    xlswriter10(1,(time)*2)=cellstr(t2);
-    xlswriter11(1,(time)*2)=cellstr(t2);
-    xlswriter12(1,(time)*2)=cellstr(t2);
+    xlwriter1(1,(time)*2-1)=cellstr(t1);%add time point in excel
+    xlwriter1(1,(time)*2)=cellstr(t2);
+    xlwriter3(1,(time)*2)=cellstr(t2);
+    xlwriter4(1,(time)*2)=cellstr(t2);
+    xlwriter5(1,(time)*2)=cellstr(t2);
+    xlwriter6(1,(time)*2)=cellstr(t2);
+    xlwriter7(1,(time)*2)=cellstr(t2);
+    xlwriter8(1,(time)*2)=cellstr(t2);
+    xlwriter9(1,(time)*2)=cellstr(t2);
+    xlwriter10(1,(time)*2)=cellstr(t2);
+    xlwriter11(1,(time)*2)=cellstr(t2);
+    xlwriter12(1,(time)*2)=cellstr(t2);
 
     addr1=strcat(folder,t1,'/');
     addr2=strcat(folder,'/',t2,'/');

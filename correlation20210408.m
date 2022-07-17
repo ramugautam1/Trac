@@ -66,8 +66,7 @@ for i=1:height(stats1)
                         z=m3;
                         Feature_map2=Fullsize_regression_2_padding(stats1.VoxelList{i,1}(index,2)+x-3:stats1.VoxelList{i,1}(index,2)+x+3,stats1.VoxelList{i,1}(index,1)+y-3:stats1.VoxelList{i,1}(index,1)+y+3,stats1.VoxelList{i,1}(index,3)+z-1:stats1.VoxelList{i,1}(index,3)+z+1,:);
                         
-                       
-                        
+                                              
                         % ---uncomment if the extended search decay is wanted
                         %Feature_map2=Feature_map2.*spatial_extend_matrix;
                         %Feature_map1=Feature_map1/mean2(Feature_map1);
