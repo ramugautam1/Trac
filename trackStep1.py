@@ -4,6 +4,7 @@ import math as math
 import os
 import sys
 import time
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
@@ -13,9 +14,10 @@ from PIL import Image
 from skimage.transform import resize
 from skimage import measure
 from skimage import morphology
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 import cc3d
+from mpl_toolkits.mplot3d import Axes3D
+
 from functions import niftiwrite, dashline
 
 
@@ -32,7 +34,7 @@ def trackStep1():
         tt = str(time)
         addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
         print(addr)
-        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result2/' + str(time) + '/'
+        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/' + str(time) + '/'
         print(addr2)
 
         if not os.path.isdir(addr2):
@@ -142,10 +144,29 @@ def trackStep1():
         dashline()
 
         #code to save 3d figure
+        plt.rcParams['figure.figsize'] = (10, 10)
+        plt.rcParams['figure.dpi'] = 300
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        myCube = np.zeros(shape=(512,280,15))
+        for i in range(0,voxels.shape[0]):
+            # c1 = [250-i, 100, 100] if i<255 else [110,300-i,110]
+            s=str(i+1)
+            for j in range(0,np.size(voxels.VoxelList[i],axis=0)):
+                myCube[voxels.VoxelList[i][j][0], voxels.VoxelList[i][j][1], voxels.VoxelList[i][j][2]] = i
+            ax.text(voxels.VoxelList[i][j][0] + 1, voxels.VoxelList[i][j][1] + 1, voxels.VoxelList[i][j][2] + 1, s,
+                    (0, 1, 0), fontsize=5, color = 'red')
+
+        ax.voxels(myCube)
 
 
 
-        #
+        plt.show()
+
+
+        fig.savefig( addr2+str(time)+'_3Dconnection2'+'.png')
 
         niftiwrite(Weights, addr2 + 'Weights_' + tt + '.nii')
 
