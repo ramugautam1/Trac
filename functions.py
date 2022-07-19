@@ -28,6 +28,42 @@ def rand():
 
 
 def size3(arg):
+    """
+    :param arg: 3d array
+    :return: [x,y,z] dimensions of 3d array
+    example: [x,y,z] = size3(np.random.rand(3,3,3))
+    """
     return [np.size(arg, axis=0), np.size(arg, axis=1), np.size(arg, axis=2)]
+
+
+def getVoxelList(arg, orgnum):
+    """
+    :param arg: np array of niftii file
+    :param orgnum: orgnum (no. of objects)
+    :return: voxellist (a pandas dataframe voxels with one feature: VoxelList, a list of id's with all its pixels)
+
+    """
+
+    [fx, fy, fz] = size3(arg)
+
+    data = {
+        "VoxelList": [[[]]]
+    }
+    voxels = pd.DataFrame(data)
+    # print(f'--------------------------{orgnum}')
+    # print(type(voxels.VoxelList[0]))
+    for i1 in range(0, fx):
+        for i2 in range(0, fy):
+            for i3 in range(0, fz):
+                if arg[i1, i2, i3] != 0:
+                    for l in range(1, orgnum + 1):
+                        if arg[i1, i2, i3] == l:
+                            print(l)
+                            if voxels.size < l + 1:
+                                voxels.loc[l - 1, 'VoxelList'] = np.array([[i1, i2, i3]])
+                            else:
+                                voxels.loc[l - 1, 'VoxelList'] = np.concatenate(
+                                    (np.array(voxels.VoxelList[l - 1]), np.array([[i1, i2, i3]])), axis=0)
+    return voxels
 
 
