@@ -153,11 +153,11 @@ def trackStep1():
 
         toc = datetime.now()
 
-        print(f'{tt}        complete        time: {toc-tic}')
+        print(f'{tt}        completed        time: {toc-tic}')
         dashline()
 
     toctoc = datetime.now()
-    print(f'Step 1 complete in {toctoc-tictic}')
+    print(f'Step 1 completed in {toctoc-tictic}')
 
     del Fullsize, Fullsize_regression, Fullsize2, Fullsize_input, stats1, \
         orgnum, stack_after, stack_after_BW, stack_after_label, i1, i2, iy, tt
