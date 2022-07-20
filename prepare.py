@@ -12,7 +12,7 @@ import scipy.io as scio
 from PIL import Image
 from skimage.transform import resize
 from tifffile import imsave
-
+from functions import niftiread, niftiwriteF
 
 def prepare():
     # takes the niftii, saves the tif's, saves the 3D images of each channel at all time points
@@ -20,14 +20,18 @@ def prepare():
     z = 15;
     originalImageName = 'EcadMyo_08'
     originalImageAddress = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/'
-    originalImage = nib.load(originalImageAddress + originalImageName + '.nii')
+    # originalImage = nib.load(originalImageAddress + originalImageName + '.nii')
+    originalImage = niftiread(originalImageAddress+originalImageName+'.nii')
+    originalImage = originalImage + 32768
 
-    originalImageFloat32 = np.asarray(originalImage.dataobj).astype(np.float32).squeeze()
+    # originalImageFloat32 = np.asarray(originalImage.dataobj).astype(np.float32).squeeze()
+    originalImageFloat32 = np.asarray(nib.load(originalImageAddress + originalImageName + '.nii').dataobj).astype(np.float32).squeeze()
+
     print(np.shape(originalImageFloat32))
 
     originalImageSize = np.shape(originalImage);
-    protein1name = 'Ecad';
-    protein2name = 'Myosin';
+    protein1name = 'Ecad'
+    protein2name = 'Myo'
 
     if not os.path.isdir(originalImageAddress + "3DImage"):
         os.makedirs(originalImageAddress + "3DImage")
@@ -41,20 +45,24 @@ def prepare():
         os.makedirs(dirp2)
 
     print(originalImageSize)
-
+    ttag = ''
     for i in range(0, originalImageSize[3]):
         if (i < 9):
-            ttag = '000'
-        elif (i < 99):
             ttag = '00'
-        else:
+        elif (i < 99):
             ttag = '0'
 
-        slice1 = originalImage.slicer[:, :, :, i, 0]
-        slice2 = originalImage.slicer[:, :, :, i, 1]
+        slice1 = originalImage[:, :, :, i, 0]
+        slice2 = originalImage[:, :, :, i, 1]
 
-        nib.save(slice1, dirp1 + '/threeD_img' + ttag + str(i + 1))
-        nib.save(slice2, dirp2 + '/threeD_img' + ttag + str(i + 1))
+        # slice1 = originalImage.slicer[:, :, :, i, 0]
+        # slice2 = originalImage.slicer[:, :, :, i, 1]
+
+        niftiwriteF(slice1, dirp1 + '/threeDimg_' + ttag + str(i + 1))
+        niftiwriteF(slice2, dirp2 + '/threeDimg_' + ttag + str(i + 1))
+
+        # nib.save(slice1, dirp1 + '/threeDimg_' + ttag + str(i + 1))
+        # nib.save(slice2, dirp2 + '/threeDimg_' + ttag + str(i + 1))
 
         for j in range(0, originalImageSize[2]):
             if (j < 9):
@@ -65,7 +73,7 @@ def prepare():
                 ztag = '0'
 
             tifname1 = dirp1 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
-            tifname2 = dirp1 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
+            tifname2 = dirp2 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
 
             Xxxx = Image.fromarray(originalImageFloat32[:, :, j, i, 0], mode='F')
             sliceA = Image.fromarray(np.asarray(Xxxx).squeeze())

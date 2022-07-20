@@ -8,15 +8,19 @@ def dashline():
 
 
 def starline():
-    print('**********************************************************')
+    print('*********************************************************')
 
 
 def niftiread(arg):
     return np.asarray(nib.load(arg).dataobj).astype(np.float32).squeeze()
 
 
-def niftiwrite(a,b):
+def niftiwrite(a, b):
     nib.save(nib.Nifti1Image(np.uint32(a),affine=np.eye(4)),b)
+
+
+def niftiwriteF(a, b):
+    nib.save(nib.Nifti1Image(a, affine=np.eye(4)), b)
 
 
 def line(a):
@@ -65,5 +69,23 @@ def getVoxelList(arg, orgnum):
                                 voxels.loc[l - 1, 'VoxelList'] = np.concatenate(
                                     (np.array(voxels.VoxelList[l - 1]), np.array([[i1, i2, i3]])), axis=0)
     return voxels
+
+def intersect(a, b):
+    a1, ia = np.unique(a, return_index=True)
+    b1, ib = np.unique(b, return_index=True)
+    aux = np.concatenate((a1, b1))
+    aux.sort()
+    c = aux[:-1][aux[1:] == aux[:-1]]
+    return c
+
+
+def setdiff(a, b):
+    a1, ia = np.unique(a, return_index=True)
+    b1, ib = np.unique(b, return_index=True)
+    return np.asarray([i for i in a1 if i not in b1])
+
+
+def isempty(a):
+    return True if np.size(a, axis=0) == 0 else False
 
 
