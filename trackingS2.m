@@ -160,7 +160,7 @@ clear Fullsize_1 Fullsize_regression_1 Fullsize_2 Fullsize_regression_2  Fullsiz
         % if not initial time point, read the fusion data of last time
         % point
         detector_fusion_old=load(strcat('D:\NEW\',folder,'\',t1,'\fusion_tracking_',t1,'.mat'),'detector3_fusion');
-        for i1=2:2:size(detector_fusion_old.detector3_fusion,1)
+        for i1=2:2:sizeRegistration1(detector_fusion_old.detector3_fusion,1)
             detector_fusion_old.detector3_fusion(i1,:)=0;
         end
     end
@@ -222,12 +222,14 @@ clear Fullsize_1 Fullsize_regression_1 Fullsize_2 Fullsize_regression_2  Fullsiz
         sizelist(i1,1)=size(stats1.VoxelList{i1,1},1);
     end
     [sizelistB,sizelistIndex] = sort(sizelist,'descend');
+
     for i1=1:size(stats1,1)
         stats2.Centroid(i1,1:3)=[stats1.Centroid(sizelistIndex(i1,1),1) stats1.Centroid(sizelistIndex(i1,1),2) stats1.Centroid(sizelistIndex(i1,1),3)];
         stats2.BoundingBox(i1,1:3)=[stats1.BoundingBox(sizelistIndex(i1,1),1) stats1.BoundingBox(sizelistIndex(i1,1),2) stats1.BoundingBox(sizelistIndex(i1,1),3)];
         stats2.VoxelList{i1,1}=stats1.VoxelList{sizelistIndex(i1,1),1};
         stats2.ConvexHull{i1,1}=stats1.ConvexHull{sizelistIndex(i1,1),1};
     end
+
     detector_fusion = [];
     detector_split = [];
     detector2_fusion = [];
