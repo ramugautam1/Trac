@@ -14,7 +14,7 @@ from skimage import measure
 
 from correlation20220708 import correlation
 # from testCorr import correlation
-from functions import dashline, starline, niftiread, niftiwrite, niftiwriteF, intersect, setdiff, isempty, rand
+from functions import dashline, starline, niftiread, niftiwrite, niftiwriteF, intersect, setdiff, isempty, rand, nan_2d
 
 
 def trackStep2():
@@ -218,17 +218,31 @@ def trackStep2():
         # Initialize new Registration variables
         newc = 0
         l = np.size(Registration1, axis=0)
-        Registration2 = np.zeros(1, 4)
+        Registration2 = [[]]
         detector_old = []
         detector_new = []
         detector_numbering = []
         c1 = 1
-        c2 = 1
+        c2 = 0
         c3 = 1
         c_numbering = 0
         cc = []
 
         # Tracking each object
+        xlswriter1 = nan_2d(20000, endpoint*2)
+        xlswriter2 = np.zeros((endpoint, 5))
+        xlswriter3 = nan_2d(20000, endpoint*2)
+        xlswriter4 = nan_2d(20000, endpoint * 2)
+        xlswriter5 = nan_2d(20000, endpoint * 2)
+        xlswriter6 = nan_2d(20000, endpoint * 2)
+        xlswriter7 = nan_2d(20000, endpoint * 2)
+        xlswriter8 = nan_2d(20000, endpoint * 2)
+        xlswriter9 = nan_2d(20000, endpoint * 2)
+        xlswriter10 = nan_2d(20000, endpoint * 2)
+        xlswriter11 = nan_2d(20000, endpoint * 2)
+        xlswriter12 = nan_2d(20000, endpoint * 2)
+
+
         for i in range(stats2.shape[0]):
             max_object_intensity1 = 0
             max_object_intensity2 = 0
@@ -266,7 +280,7 @@ def trackStep2():
 
             a = []
             a_t_1 = []
-            k = boundary(b)
+            k = boundary(b)                                                                         ### RRR
             for i1 in range(np.size(b,axis=0)):
                 a.append(Fullsize_2_mark[b[i1,0],b[i1,1],b[i1,2]])
             value = statistics.mode(np.array(a).flatten())
@@ -292,27 +306,75 @@ def trackStep2():
                 value = value_t_1
                 print(value)
             # Check whether the object has alreadybeen tracked in the current time point
-            if not isempty(intersect(value,Registration2[:,0])):
-                value2 = setdiff(a, Registration2[:,0])
+            if not isempty(intersect(value, np.array(Registration2)[:, 0])):
+                value2 = setdiff(a, np.array(Registration2)[:, 0])
 
-                if not isempty(value2) and np.size(value2,axis=1) > 0 and not isempty(intersect(value2,Registration1[:,0])):
-                    value = value2[1, math.ceil(rand()*np.size(value2,axis=1))]
+                if not isempty(value2) and np.size(value2, axis=1) > 0 and not isempty(intersect(value2, Registration1[:,0])):
+                    value = value2[1, math.ceil(rand()*np.size(value2, axis=1))]
 
             # If the representatiove of an object is NaN, it means that it is a new object, Assign new ID to it
 
             if np.isnan(value):
-                color = []
+                color = [0, 0, 0]
                 newc += 1
+                Registration2.append([newc, stats2['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]])
+                value = newc
+                # Reassign new labells to the sample
+                for i1 in range(np.size(b,axis=0)):
+                    Fullsize_2_mark[b[i1,0],b[i1,1],b[i1,2]] = value
+                    Fullsize_2_2[b[i1,0],b[i1,1],b[i1,2]] = value
 
-                Registration2[1+n]
+                txt = 'NEW ' + str(value)
+                detector_new.append(value)
 
+                # Document the object characteristics
+                xlswriter1[newc, time*2-2] = 'new'
+                xlswriter1[newc, time*2-1] = str(newc)
 
+                xlswriter3[newc, time*2-1] = str(max_object_intensity1)
+                xlswriter4[newc, time * 2 - 1] = str(average_object_intensity1)
+                xlswriter5[newc, time * 2 - 1] = str(np.size(b, axis=0))
 
+                xlswriter6[newc, time * 2 - 1] = str(stats2['centroid-0'][i])
+                xlswriter7[newc, time * 2 - 1] = str(stats2['centroid-1'][i])
+                xlswriter8[newc, time * 2 - 1] = str(stats2['centroid-2'][i])
 
+                xlswriter11[newc, time * 2 - 1] = str(max_object_intensity2)
+                xlswriter12[newc, time * 2 - 1] = str(average_object_intensity2)
 
+                draw_text(value) = text(b(end, 1), b(end, 2), b(end, 3), txt, 'Rotation', +15)              # RRR
 
+            # if the representative is not a NaN, it means we find a tracking
+            elif value > 0 and not np.isnan(value):
+                if isempty(intersect(value,np.array(Registration2)[:,0])):
+                    color = map(value,1:3)                                                                  # RRR
 
+                    Registration2[value][0] = value
+                    Registration2[value][1:4]= [stats2['centroid-0'][value],stats2['centroid-1'][value],stats2['centroid2'][value]]
 
+                    txt = 'OLD ' + str(value)
+
+                    # Reassign new labels to the sample
+                    for i1 in range(np.size(b,axis=0)):
+                        Fullsize_2_2[b[i1,0],b[i1,1], b[i1,2]] = value
+
+                    detector_old[c2][0] = value
+                    c2 += 1
+                    xlswriter1[value,time*2-2] = str(value)
+                    xlswriter1[value,time*2-1] = str(value)
+                    xlswriter3[newc, time * 2 - 1] = str(max_object_intensity1)
+
+                    xlswriter4[newc, time * 2 - 1] = str(average_object_intensity1)
+                    xlswriter5[newc, time * 2 - 1] = str(np.size(b, axis=0))
+
+                    xlswriter6[newc, time * 2 - 1] = str(stats2['centroid-0'][i])
+                    xlswriter7[newc, time * 2 - 1] = str(stats2['centroid-1'][i])
+                    xlswriter8[newc, time * 2 - 1] = str(stats2['centroid-2'][i])
+
+                    xlswriter11[newc, time * 2 - 1] = str(max_object_intensity2)
+                    xlswriter12[newc, time * 2 - 1] = str(average_object_intensity2)
+
+                    draw_forsure = 0                                                                  #### RRR
 
 
     workbook.close()

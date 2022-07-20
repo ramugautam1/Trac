@@ -89,3 +89,9 @@ def isempty(a):
     return True if np.size(a, axis=0) == 0 else False
 
 
+def nan_2d(a,b):
+    x = np.zeros(shape=(a,b))
+    for i in range(np.size(x, axis=0)):
+        for j in range(np.size(x, axis=1)):
+            x[i, j] = np.nan
+    return x
