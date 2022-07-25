@@ -61,21 +61,21 @@ def trackStep1():
             for i2 in range(0, I3dw[1], I3d[1]):
 
                 V_arr = np.asarray(nib.load(Files1[c_file]).dataobj).astype(np.float32).squeeze()
-                print(f'shape {np.shape(V_arr)}')
+                # print(f'shape {np.shape(V_arr)}')
                 # stop
                 V_arr = 1 - V_arr
                 V2_arr = np.uint8(V_arr * 255)
                 # V3_arr = resize(V2_arr, I3d, order=0)
                 V3_arr = np.zeros(shape=(32,35,15))
-                print(np.shape(V2_arr[:,:,4]))
+                # print(np.shape(V2_arr[:,:,4]))
                 for ix in range(15):
-                    V3_arr[:,:,ix] = cv2.resize(V2_arr[:,:,ix], (35,32), interpolation=cv2.INTER_AREA)
+                    V3_arr[:, :, ix] = cv2.resize(V2_arr[:,:,ix], (35, 32), interpolation=cv2.INTER_LINEAR)
 
                 a = i1
                 b = i1 + I3d[0]
                 c = i2
                 d = i2 + I3d[1]
-                print(a,b,c,d)
+                # print(a, b, c, d)
 
                 # print(f'{a}:{b}, {c}:{d}, : ')
 
@@ -96,7 +96,7 @@ def trackStep1():
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
-        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 20))
+        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 30))
 
         stack_after = Fullsize2
 
@@ -111,6 +111,32 @@ def trackStep1():
 
         # stats1 = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
         stats1 = pd.DataFrame(measure.regionprops_table(CC, properties=('label', 'bbox', 'centroid', 'coords')))
+
+
+        # vxllst = stats1.coords
+        #
+        # Fullsizex_label = np.zeros((512,280,15))
+        # for i in range(0,stats1.shape[0]):
+        #     for j in range(0,np.size(vxllst[i], axis=0)):
+        #         Fullsizex_label[vxllst[i][j][0],vxllst[i][j][1],vxllst[i][j][2]] = stats1.label[i]
+        #
+        # print(stats1[200:300])
+        #
+        # niftiwrite(Fullsizex_label,addr2 + 'Fullsizex_label_' + tt + '.nii')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         nib.save(nib.Nifti1Image(np.uint32(stack_after_label), affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
 
