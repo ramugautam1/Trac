@@ -26,7 +26,7 @@ def trackStep2():
     padding = [20, 20, 2]
     timm = datetime.now()
 
-    folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/'
+    folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/'
     trackbackT = 2
 
     if not os.path.isdir(folder):
@@ -60,7 +60,7 @@ def trackStep2():
     depth = 64  # the deep features to take in correlation calculation
     initialpoint = 1  # the very first time point of all samples
     startpoint = 1  # the time point to start tracking
-    endpoint = 41  # the time point to stop tracking
+    endpoint = 40#40  # the time point to stop tracking
 
     # xlswriter1 = pd.DataFrame(nan_2d(20000, endpoint * 2))
     # xlswriter2 = pd.DataFrame(np.zeros((endpoint, 5)))
@@ -115,7 +115,8 @@ def trackStep2():
 
         # calculate correlation between this and next time point, using (labeled images and weights from step 1)
 
-        if time - initialpoint < trackbackT:  # calculating correlation for start time points (e.g. time=2)
+        # if time - initialpoint < trackbackT:  # calculating correlation for start time points (e.g. time=2)
+        if time==initialpoint:
             for i1 in range(1, time - initialpoint + 1 + 1):
                 print(f'time  point: {time}')
                 print(addr2)
@@ -129,8 +130,7 @@ def trackStep2():
                     Fullsize_1 = niftiread(addr1 + 'Fullsize_2_aftertracking_' + t1 + '.nii')
                     Fullsize_regression_1 = niftiread(addr1 + 'Weights_' + t1 + '.nii')
 
-                correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regression_2, t2, i1,
-                            spatial_extend_matrix, addr2, padding)
+                correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regression_2, t2, i1, spatial_extend_matrix, addr2, padding)
                 dashline()
 
         else:
@@ -194,8 +194,8 @@ def trackStep2():
         Fullsize_2_2 = np.zeros(shape=(np.shape(Fullsize_2)))
 
         # crop the expanded sample to its original size
-        correlation_map_padding_show2 = correlation_map_padding_show1[20:-1 * padding[0], 20:-1 * padding[1],
-                                        2:-1 * padding[2]]
+        correlation_map_padding_show2 = correlation_map_padding_show1[padding[0]:-1 * padding[0], padding[1]:-1 * padding[1],
+                                        padding[2]:-1 * padding[2]]
         Fullsize_2_mark = correlation_map_padding_show2
 
         if time > initialpoint:
@@ -213,20 +213,28 @@ def trackStep2():
 
             # ------------------------------------------------------------------
 
-            detector_fusion_old = scio.loadmat(folder + t1 + '/' + 'fusion_tracking_' + t1 + '.mat', 'detector3_fusion')
-            for i1 in range(1, np.size(detector_fusion_old.detector3_fusion, axis=0) + 1, 2):
-                detector_fusion_old.detector3_fusion[i1, :] = 0
+            # detector_fusion_old = scio.loadmat(folder + t1 + '/' + 'fusion_tracking_' + t1 + '.mat', 'detector3_fusion')
 
-            Fullsize_2_mark[Fullsize_2 == 0] = 0
-            # ------------------------------------------------------------------
+            detector_fusion_old = scio.loadmat(folder + t1 + '/' + 'fusion_tracking_' + t1 + '.mat')
+
+            for i1 in range(1, np.size(detector_fusion_old['detector3_fusion'], axis=0) + 1, 2):
+                detector_fusion_old['detector3_fusion'][i1, :] = 0
+
+            # print(detector_fusion_old['detector3_fusion'])
+
+
+        # niftiwrite(Fullsize_2_mark, '/home/nirvan/Desktop/f2mbefore.nii')
+        Fullsize_2_mark[Fullsize_2 == 0] = 0
+        # niftiwrite(Fullsize_2_mark,'/home/nirvan/Desktop/f2m.nii')
+            # ------------------------------- OK Tested Until Here-----------------------------------
 
         # del correlation_map_padding_show1, correlation_map_padding_show1_2, correlation_map_padding_hide1, correlation_map_padding_hide1_2
 
         # Get the object characteristics
-        Fullsize_2_mark_BW = Fullsize_2_mark
-        Fullsize_2_mark_BW[Fullsize_2_mark_BW > 0] = 1
-        Fullsize_2_mark_BW = Fullsize_2_mark_BW.astype(bool)
-        Fullsize_2_mark_label, orgnum = measure.label(Fullsize_2_mark, connectivity=1, return_num=True)
+        # Fullsize_2_mark_BW = Fullsize_2_mark
+        # Fullsize_2_mark_BW[Fullsize_2_mark_BW > 0] = 1
+        # Fullsize_2_mark_BW = Fullsize_2_mark_BW.astype(bool)
+        # Fullsize_2_mark_label, orgnum = measure.label(Fullsize_2_mark, connectivity=1, return_num=True)
 
         # stats1 = regionprops3(Fullsize_2,'BoundingBox','VoxelList','ConvexHull','Centroid');
         stats1 = pd.DataFrame(
@@ -244,17 +252,18 @@ def trackStep2():
         print(f'object count {np.amax(stats2.label)}')
 
         # -----
-        detector_fusion = []
+        detector_fusion = {}
         detector_split = {}
-        detector2_fusion = []
-        detector3_fusion = []
+        detector2_fusion = {}
+        detector3_fusion = {}
 
         # stack_after_label[Fullsize_2_mark > 0] = 0  Not used, not initialized
+        Fullsize_2_mark = Fullsize_2_mark.astype(float)
 
         Fullsize_2_mark[Fullsize_2_mark == 0] = np.nan
 
         # Initialize new Registration variables
-        newc = -1
+        newc = 0
         l = np.size(Registration1, axis=0)
         Registration2 = {}
         detector_old = {}
@@ -263,7 +272,7 @@ def trackStep2():
         c1 = 0
         c2 = 0
         c3 = 0
-        c_numbering = -1
+        c_numbering = 0
         cc = {}
 
         # Tracking each object
@@ -279,9 +288,11 @@ def trackStep2():
         xlswriter10 = pd.DataFrame(nan_2d(20000, endpoint * 2))
         xlswriter11 = pd.DataFrame(nan_2d(20000, endpoint * 2))
         xlswriter12 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+
         print(stats2.shape[0])
-        for i in range(stats2.shape[0]):
-            print(f'Obj No. {i+1} (i)')
+
+        for i in range(stats2.shape[0]): # For each object in stats2 --------------------------------------------------------------------------------
+            # print(f'Obj No. {i+1} (i)')
             max_object_intensity1 = 0
             max_object_intensity2 = 0
             b = stats2.coords[i]
@@ -322,71 +333,56 @@ def trackStep2():
             a = {}
             a_t_1 = {}
             # k = boundary(b)                                                                         ### RRR
-            print(f'       a      {a}')
 
-            for i1 in range(np.size(b, axis=0)):
+            for i1 in range(np.size(b, axis=0)): # for each pixel in object b
                 # print(b[i1, 0], b[i1, 1], b[i1, 2])
                 # print(Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]])
-                a[i1] = Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]]
+                a[i1] = Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] # add the value of that pixel in Fullsize_2_mark (i.e. the show-file cropped and mapped to t2 label file) to a
 
             datta = np.array(list(a.values()))
+            value = statistics.mode(datta.flatten())
 
-            value = statistics.mode(np.array(datta).flatten())
+            value = np.nan if np.count_nonzero(np.isnan(datta)) > np.count_nonzero(datta==value) else value
 
-            if (np.isnan(value)):
-                print('-------nan--------')
+            # if (np.isnan(value)):
+            #     print('-------nan--------')
 
-            # u, cx = np.unique(np.array(datta), return_counts=True)
-            #
-            # Value_f = dict(zip(u, cx))[value]
-            #
-            # countnan = a.count(np.nan)
-            #
-            # if countnan > Value_f:
-            #     value = np.nan
-
-            if time > startpoint:
+            if time > startpoint:    #Deal with fusion from previous time points
                 for i1 in range(np.size(b, axis=0)):
                     a_t_1[i1] = Fullsize_1[b[i1, 0], b[i1, 1], b[i1, 2]]
-                # ----
-                datta = np.array(list(a.values_t_1))
-                if np.count_nonzero(np.isnan(datta)) == len(a_t_1):
-                    Value_f_t_1 = np.nan
-                else:
-                    value_t_1 = statistics.mode(datta[~np.isnan(datta)].flatten())
-                    u, cx = np.unique(np.array(a_t_1), return_counts=True)
-                    Value_f_t_1 = dict(zip(u, cx))[value_t_1]
-                # ----
-                print(f'Value_f_t_1 {Value_f_t_1}')
+                    # ----
+                datta = np.array(list(a_t_1.values()))
+                value_t_1 = statistics.mode(datta.flatten())
+                Value_f_t_1 = np.count_nonzero(datta.flatten() == value_t_1)
                 # Check whether the object has already merged in the last time point
-                if not np.isnan(value_t_1) and isempty(intersect(value_t_1, np.array(Registration1.keys()))) \
-                        and not isempty(intersect(value_t_1, detector_fusion_old.detector3_fusion)):  # merge happened in last time point
-                    detector_numbering[value] = value_t_1
+                if not np.isnan(value_t_1) and isempty(intersect(value_t_1, np.array(Registration1[:, 0]))) \
+                        and not isempty(
+                    intersect(value_t_1, detector_fusion_old['detector3_fusion'])):  # merge happened in last time point
+                    detector_numbering[c_numbering] = [value, value_t_1]
                     value = value_t_1
                     c_numbering = c_numbering + 1
-                    print(value)
+                    # print(value)
 
-            print(f'Registration2 {Registration2} \nkeys:')
-            print(np.array(list(Registration2.keys())))
+            # print(f'Registration2 keys:')
+            # print(np.array(list(Registration2.keys())))
+
             # Check whether the object has already been tracked in the current time point
             if not isempty(intersect(value, np.array(list(Registration2.values())))):
-                # print(Registration2)
-                print(f'{value}------in-----{a}')
-                value2 = setdiff(np.array(list(a.values())), np.array(list(Registration2.values())))
-                print(f'value2 {value2}')
-                print(not isempty(value2))
-                print(np.size(value2))
+                value2 = setdiff(np.array(list(a.values())), np.array(list(Registration2.values()))[:,0])
 
                 if not isempty(value2) and np.size(value2) > 0 and not isempty(intersect(value2, Registration1[:, 0])):
-                    value = value2[0, math.ceil(rand() * np.size(value2, axis=1))]
+                    value = value2[math.floor(rand() * np.size(value2))]
 
-            # If the representatiove of an object is NaN, it means that it is a new object, Assign new ID to it
             if not np.isnan(value):
                 value = int(value)
+
+            # If the representatiove of an object is NaN, it means that it is a new object, Assign new ID to it
+
             if np.isnan(value):
                 color = [0, 0, 0]
                 newc += 1
-                Registration2[l+newc] = [l+newc,stats2['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]]
+                # print(f'new object {l + newc}')
+                Registration2[l+newc] = [l+newc, stats2['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]]
                 value = l + newc
                 # Reassign new labels to the sample
                 for i1 in range(np.size(b, axis=0)):
@@ -417,15 +413,9 @@ def trackStep2():
 
             # if the representative is not a NaN, it means we find a tracking
             elif not np.isnan(value) and value > 0:
-                if isempty(intersect(value, np.array(list(Registration2.keys())))):
-                    # color = map(value,1:3)                                                                  # RRR
+                if isempty(intersect(value, np.array(list(Registration2.keys())))):       # if value is already not in Registration 2,
 
-                    # Registration2[value][0] = value
-                    Registration2[value] = [l+newc, stats2['centroid-0'][i], stats2['centroid-1'][i],
-                                                 stats2['centroid-2'][i]]
-
-                    txt = 'OLD ' + str(value)
-
+                    Registration2[value] = [value, stats2['centroid-0'][i], stats2['centroid-1'][i], stats2['centroid-2'][i]]
                     # Reassign new labels to the sample
                     for i1 in range(np.size(b, axis=0)):
                         Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = value
@@ -433,7 +423,7 @@ def trackStep2():
                     detector_old[c2] = value
 
 
-                    print(f'value {value} time {time}')
+                    # print(f'value {value} time {time}')    # -------------
                     c2 += 1
                     tx = time*2-2
                     xlswriter1.iloc[value, tx] = str(value)
@@ -453,28 +443,29 @@ def trackStep2():
                     draw_forsure = 0  #### RRR
 
                 #
-                # Draw code is here. I'm confused
-                #
+                # Draw code goes here. I'm confused.
 
-                # If the representative is not NaN but is zero, it indicates a split
+                # If the representative is not NaN but is zero, it indicates a split (Actually, if the correlation is there but the object id is already in Registration2)
                 else:
                     # color = map(value,1:3)
                     newc += 1
-                    Registration2[l+newc]= [value, stats2['centroid-0'][i], stats2['centroid-1'][i],
+                    Registration2[l+newc]= [l+newc, stats2['centroid-0'][i], stats2['centroid-1'][i],
                                                 stats2['centroid-2'][i]]
-                    detector_split[value]=l+newc
+                    detector_split[c3]=[value, l+newc]
+                    c3 += 1
+                    # print(f'split tracked {value} to {value} and {l+newc} at coordinates {Registration2[l+newc]}')
 
                     xlswriter10.iloc[value, time * 2 - 1] = str(value)
                     xlswriter10.iloc[newc, time * 2 - 1] = str(value)
                     # Reassign new labels to the sample
-                    for i1 in range(np.size(b, axis=1)):
-                        Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = newc
-                        Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] = value
+                    for i1 in range(np.size(b, axis=0)):
+                        Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = l+newc
+                        Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] = l+newc
 
                     for ix in range((time - 1) * 2):
                         xlswriter1.iloc[newc, ix] = xlswriter1.iloc[value, ix]
                     var = (time - 1) * 2 - 1
-                    xlswriter1.iloc[newc, var] = str(value)
+                    xlswriter1.iloc[newc, var] = value
                     xlswriter1.iloc[newc, var] = str(newc)
                     xlswriter3.iloc[newc, var] = str(max_object_intensity1)
                     xlswriter4.iloc[newc, var] = str(average_object_intensity1)
@@ -486,97 +477,165 @@ def trackStep2():
                     xlswriter12.iloc[newc, var] = str(average_object_intensity2)
 
                     for i2 in range(time * 2):
-                        if xlswriter1.iloc[value, i2] != np.nan and str(xlswriter1.iloc[value, i2] != "new"):
+                        print(xlswriter1.iloc[value, i2])
+                        if str(xlswriter1.iloc[value, i2]) != "new" and not pd.isna(xlswriter1.iloc[value, i2]):
                             value = str(xlswriter1.iloc[value, i2])
                             break
-
-                    value = newc
-        print(xlswriter1)
-        print(xlswriter2)
+                    value = l+newc
+        # print(xlswriter1)
+        # print(xlswriter2)
         # colormap(map)             RRR
-        print(Registration2)
+        # print(Registration2)
+        newArr = np.zeros((max(sorted(Registration2)),4))
+
+        for pos in range(max(sorted(Registration2))):
+            if pos in sorted(Registration2):
+                newArr[pos,:]=Registration2[pos]
+        # print(detector_split)
+        # print(newArr)
 
         # Write the tracking result
-        niftiwriteF(np.array(list(Registration2.values())), addr2 + 'Registration2_tracking_' + t2 + '.nii')
+        niftiwriteF(newArr, addr2 + 'Registration2_tracking_' + t2 + '.nii')
         niftiwriteF(Fullsize_2_2, addr2 + 'Fullsize_2_aftertracking_' + t2 + '.nii')
-    #
-    #     # Tracking old and split object is almost done, now time for fusion detection and alarms
-    #
-    #     c = 0
-    #
-    #     for i1 in range(stats2.shape[0]):  # for i1=1:size(stats2.VoxelList,1)
-    #         b = stats2.coords[i1]
-    #
-    #         UNIQUEcount = []
-    #
-    #         for i2 in range(np.size(b, axis=0)):
-    #             UNIQUEcount.append(Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]])
-    #             if np.isnan(np.array(UNIQUEcount)[i2]):
-    #                 UNIQUEcount[i2, 0] = 0
-    #
-    #         uniq, cnts = np.unique(np.array(UNIQUEcount), return_counts=True)
-    #         value_counts = np.row_stack((uniq, cnts))
-    #
-    #         if np.size(value_counts, axis=0) > 1:  # if length(C) > 1
-    #             for j in range(2):
-    #                 detector_fusion.append(value_counts[j])
-    #             # c += 2
-    #
-    #     for i1 in range(0, np.size(detector_fusion, axis=0), 2):  # fusion 0 filter
-    #         print(np.shape(detector_fusion))
-    #
-    #         if np.array(detector_fusion)[i1, 0] == 0:
-    #             for iy in range(i1, i1 + 2):
-    #                 detector_fusion[iy][0:-1] = detector_fusion[iy][1:]
-    #
-    #     detector2_fusion = detector_fusion
-    #
-    #     for i1 in range(0, np.size(detector2_fusion, axis=0), 2):
-    #         for i2 in range(0, np.size(detector2_fusion, axis=1)):
-    #             if intersect(detector2_fusion[i1, i2], Registration2[:, 1]):
-    #                 for ix in range(i1, i1 + 1 + 1):
-    #                     detector2_fusion[ix, i2] = 0
-    #         for i2 in range(0, np.size(detector2_fusion, axis=1), 1):
-    #             if detector2_fusion[i1 + 1, i2] < 5:
-    #                 for ix in range(i1, i1 + 1 + 1):
-    #                     detector2_fusion[ix, i2] = 0
-    #
-    #     c = 0
-    #     detector3_fusion = []
-    #     for i1 in range(0, np.size(detector2_fusion, axis=0), 2):
-    #         if np.count_nonzero(detector2_fusion[i1, :]) != 0:
-    #             for cx in range(2):
-    #                 detector3_fusion.append(detector_fusion[i1 + cx, :])
-    #                 c += 2  # not used here
-    #
-    #     # Replace the labels and colors inthe figure based on object identified
-    #     # Figure code missing
-    #
-    #     for i2 in range(0, np.size(detector3_fusion, axis=0), 2):
-    #         detector3_fusion_exist = 0;
-    #         for i1 in range(np.size(detector3_fusion, axis=1)):
-    #             if detector3_fusion[i2, i1] > 0:
-    #                 None
-    #
-    # # npz, pickle !!!!!!!!!!!!!!!
-    #
-    # #
-    #
-    # writer = pd.ExcelWriter('filename', engine='xlsxwriter')
-    #
-    # xlswriter1.to_excel(writer, sheet_name='Sheet1', startrow=0)
-    # xlswriter2.to_excel(writer, sheet_name='Sheet2', startrow=1)
-    # xlswriter3.to_excel(writer, sheet_name='Sheet3', startrow=0)
-    # xlswriter4.to_excel(writer, sheet_name='Sheet4', startrow=0)
-    # xlswriter5.to_excel(writer, sheet_name='Sheet5', startrow=0)
-    # xlswriter6.to_excel(writer, sheet_name='Sheet6', startrow=0)
-    # xlswriter7.to_excel(writer, sheet_name='Sheet7', startrow=0)
-    # xlswriter8.to_excel(writer, sheet_name='Sheet8', startrow=0)
-    # xlswriter9.to_excel(writer, sheet_name='Sheet9', startrow=0)
-    # xlswriter10.to_excel(writer, sheet_name='Sheet10', startrow=0)
-    # xlswriter11.to_excel(writer, sheet_name='Sheet11', startrow=0)
-    # xlswriter12.to_excel(writer, sheet_name='Sheet12', startrow=0)
 
-    # workbook.close()
+# ====================== Tracking old and split object is almost done, now time for fusion detection and alarms =============================
+
+        c = 0
+
+        for i1 in range(stats2.shape[0]):  # for each object in stats2
+            b = stats2.coords[i1]
+            UNIQUEcount = {}
+
+            for i2 in range(np.size(b, axis=0)): # for each pixel in b
+                # UNIQUEcount.append(Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]])
+                UNIQUEcount[i2] = 0 if np.isnan(Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]]) else Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]]
+
+            uniq, cnts = np.unique(np.array(list(UNIQUEcount.values())), return_counts=True)
+            uniq = uniq.astype(int)
+            # value_counts = np.row_stack((uniq, cnts))
+            # print(f'value_counts {value_counts}') # --
+
+
+            if len(uniq) > 1:  # if length(C) > 1
+                detector_fusion[c] = uniq
+                detector_fusion[c+1] = cnts
+                c += 2
+
+        print(f'detector_fusion ------------------- before arrangement')
+        for ix in range(len(detector_fusion)):
+            print(detector_fusion[ix])
+
+        for i1 in range(0, len(detector_fusion),2):
+            if detector_fusion[i1][0] ==0:
+                detector_fusion[i1 + 1] = detector_fusion[i1 + 1][1:]
+                detector_fusion[i1] = detector_fusion[i1][1:]
+
+        print(f'detector_fusion after arrangement ============')
+        for ix in range(len(detector_fusion)):
+            print(detector_fusion[ix])
+
+        detector2_fusion = detector_fusion
+
+        # Fusion alarm part 2
+        for i1 in range(0, len(detector2_fusion), 2):
+            for i2 in range(len(detector2_fusion[i1])):
+                print(f' i1 {i1} i2 {i2} len {detector2_fusion[i1]}')
+                if not isempty(intersect(detector2_fusion[i1][i2],np.array(list(Registration2.values()))[:,0])):
+                    detector2_fusion[i1][i2] = 0
+                    detector2_fusion[i1+1][i2] = 0
+            for i2 in range(len(detector2_fusion[i1])): # fusion size filter
+                if detector2_fusion[i1+1][i2] < 5:
+                    detector2_fusion[i1][i2] = 0
+                    detector2_fusion[i1+1][i2] = 0
+        print(f'detector2_fusion ------------ after size filter')
+        for ix in range(len(detector2_fusion)):
+            print(detector2_fusion[ix])
+        # for i1 in range(0, len(detector2_fusion), 2): #fusion alarm part 2
+        #     read1 = np.array(list(detector2_fusion[i1]))
+        #     read2 = np.array(list(detector2_fusion[i1+1]))
+        #     # print(f'read1 {read1}')
+        #     for i2 in range(0, np.size(detector2_fusion[i1])):
+        #         # print(detector2_fusion[i1][i2])
+        #         if intersect(detector2_fusion[i1][i2], np.array(list(Registration2.values()))[:,0]):
+        #             read1[i2] = 0
+        #             read2[i2] = 0
+        #     detector2_fusion[i1] = read1
+        #     detector2_fusion[i1+1] = read2
+        #     # print(f'read1 changed {read1}')
+        #     read1 = np.array(list(detector2_fusion[i1]))
+        #     read2 = np.array(list(detector2_fusion[i1 + 1]))
+        #
+        #     for i2 in range(0, np.size(detector2_fusion[i1]), 1): # size filter
+        #         if detector2_fusion[i1 + 1][i2] < 5:
+        #             read1[i2] = 0
+        #             read2[i2] = 0
+        #     detector2_fusion[i1] = read1
+        #     detector2_fusion[i2] = read2
+
+        c = 0
+
+        for i1 in range(0, len(detector2_fusion), 2):
+            if np.count_nonzero(detector2_fusion[i1]) != 0:
+                detector3_fusion[c] = detector_fusion[i1]
+                detector3_fusion[c+1] = detector_fusion[i1+1]
+                # print(detector3_fusion[c])
+                c += 2
+        print(f'detector3_fusion ----------------')
+        for ix in range(len(detector3_fusion)):
+            print(detector3_fusion[ix])
+        # scio.savemat(addr2 + "fusion_tracking_" + t2 + ".mat", fille)
+
+        # Figure code missing
+        #
+        # for i2 in range(0, np.size(detector3_fusion, axis=0), 2):
+        #     detector3_fusion_exist = 0;
+        #     for i1 in range(np.size(detector3_fusion, axis=1)):
+        #         if detector3_fusion[i2, i1] > 0:
+        #             None
+        # dashline()
+        # print(detector3_fusion)
+
+        tempvar = 0
+        sizes={}
+        varT = np.array(list(detector3_fusion.values()))
+        for ixx in range(len(detector3_fusion)):
+            if len(list(detector3_fusion.values())[ixx]) > tempvar:
+                tempvar = len(list(detector3_fusion.values())[ixx])
+                # print(f'tempvar {tempvar}')
+            sizes[ixx]=len(list(detector3_fusion.values())[ixx])
+
+        varx = np.zeros((len(detector3_fusion),tempvar))
+        for ix in range(np.size(varx, axis=0)):
+            for jx in range(np.size(varT[ix])):
+                varx[ix,jx] = varT[ix][jx]
+
+        # print(varx)
+
+        fille = {"detector3_fusion": varx}
+
+        scio.savemat(addr2 + "fusion_tracking_" + t2 + ".mat", fille)
+
+
+    # npz, pickle !!!!!!!!!!!!!!!
+
+    #
+
+
+    writer = pd.ExcelWriter('filename', engine='xlsxwriter')
+
+    xlswriter1.to_excel(writer, sheet_name='Sheet1', startrow=0)
+    xlswriter2.to_excel(writer, sheet_name='Sheet2', startrow=1)
+    xlswriter3.to_excel(writer, sheet_name='Sheet3', startrow=0)
+    xlswriter4.to_excel(writer, sheet_name='Sheet4', startrow=0)
+    xlswriter5.to_excel(writer, sheet_name='Sheet5', startrow=0)
+    xlswriter6.to_excel(writer, sheet_name='Sheet6', startrow=0)
+    xlswriter7.to_excel(writer, sheet_name='Sheet7', startrow=0)
+    xlswriter8.to_excel(writer, sheet_name='Sheet8', startrow=0)
+    xlswriter9.to_excel(writer, sheet_name='Sheet9', startrow=0)
+    xlswriter10.to_excel(writer, sheet_name='Sheet10', startrow=0)
+    xlswriter11.to_excel(writer, sheet_name='Sheet11', startrow=0)
+    xlswriter12.to_excel(writer, sheet_name='Sheet12', startrow=0)
+
+    workbook.close()
 
 # USE DICTIONARY!!!!!!!!!!!!!!!!!!!!!

@@ -30,7 +30,7 @@ def trackStep1():
     tictic = datetime.now()
 
     colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
-    t1 = 1
+    t1 = 35
     t2 = 41
     # t2 = 1
     # size of image, size of cuboids
@@ -43,7 +43,7 @@ def trackStep1():
         tt = str(time)
         addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
         print(addr)
-        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/' + str(time) + '/'
+        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/' + str(time) + '/'
         print(addr2)
 
         if not os.path.isdir(addr2):
@@ -96,7 +96,7 @@ def trackStep1():
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
-        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 30))
+        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 27))
 
         stack_after = Fullsize2
 
