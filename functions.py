@@ -23,6 +23,10 @@ def niftiwriteF(a, b):
     nib.save(nib.Nifti1Image(a, affine=np.eye(4)), b)
 
 
+def niftiwrite8(a, b):
+    nib.save(nib.Nifti1Image(np.uint8(a),affine=np.eye(4)),b)
+
+
 def line(a):
     return a*50
 

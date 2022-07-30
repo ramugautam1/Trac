@@ -18,7 +18,6 @@ from functions import dashline, starline, niftiread, niftiwrite, niftiwriteF, in
 
 
 def trackStep2():
-
     starline()  # print **************************************
     print('step 2 start')
     starline()
@@ -27,7 +26,7 @@ def trackStep2():
     padding = [20, 20, 2]
     timm = datetime.now()
 
-    folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/'
+    folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/'
     trackbackT = 2
 
     if not os.path.isdir(folder):
@@ -61,21 +60,37 @@ def trackStep2():
     depth = 64  # the deep features to take in correlation calculation
     initialpoint = 1  # the very first time point of all samples
     startpoint = 1  # the time point to start tracking
-    endpoint = 41  # the time point to stop tracking
+    endpoint = 40#40  # the time point to stop tracking
 
-    spatial_extend_matrix = np.full((10, 10, 3, depth), 0)  # the weight decay of 'extended search' (not used right now in correlation calculation)
+    # xlswriter1 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter2 = pd.DataFrame(np.zeros((endpoint, 5)))
+    # xlswriter3 = nan_2d(20000, endpoint * 2)
+    # xlswriter4 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter5 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter6 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter7 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter8 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter9 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter10 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter11 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+    # xlswriter12 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+
+    print(f'depth = {depth}, startpoint = {startpoint}, endpoint = {endpoint}')
+
+    spatial_extend_matrix = np.full((10, 10, 3, depth),
+                                    0)  # the weight decay of 'extended search' (not used right now in correlation calculation)
 
     for i1 in range(0, 10):
         for i2 in range(0, 10):
             for i3 in range(0, 3):
-                spatial_extend_matrix[i1, i2, i3, :] = math.exp(((i1+1-5)+(i2+1-5)+(i3+1-2))/20)
+                spatial_extend_matrix[i1, i2, i3, :] = math.exp(((i1 + 1 - 5) + (i2 + 1 - 5) + (i3 + 1 - 2)) / 20)
 
-    for time in range(startpoint, endpoint+1):
+    for time in range(startpoint, endpoint + 1):
         dashline()
         tic = datetime.now()
         print('time point: ' + str(time))
         t1 = str(time)
-        t2 = str(time+1)
+        t2 = str(time + 1)
         worksheet1.write(0, time * 2 - 2, str(t1))
         worksheet1.write(0, time * 2 - 1, str(t2))
         worksheet3.write(0, time * 2 - 1, str(t2))
@@ -96,32 +111,36 @@ def trackStep2():
         # if not os.path.isdir(folder):
         #     os.makedirs(addr1)
         Files1 = sorted(glob.glob(addr1 + '*.nii'))
-        Files2 = sorted(glob.glob(addr2+'.nii'))
+        Files2 = sorted(glob.glob(addr2 + '.nii'))
 
-        if time-initialpoint < trackbackT:  # calculating correlation for start time points (e.g. time=2)
-            for i1 in range(1, time-initialpoint+1+1):
+        # calculate correlation between this and next time point, using (labeled images and weights from step 1)
+
+        # if time - initialpoint < trackbackT:  # calculating correlation for start time points (e.g. time=2)
+        if time==initialpoint:
+            for i1 in range(1, time - initialpoint + 1 + 1):
                 print(f'time  point: {time}')
                 print(addr2)
                 Fullsize_2 = niftiread(addr2 + 'Fullsize_label_' + t2 + '.nii')
                 Fullsize_regression_2 = niftiread(addr2 + 'Weights_' + t2 + '.nii')
-                if i1 == time - initialpoint+1:
+                if i1 == time - initialpoint + 1:
                     print(addr1)
-                    Fullsize_1 = niftiread(addr1 + 'Fullsize_label_'+t1+'.nii')
-                    Fullsize_regression_1 = niftiread(addr1 + 'Weights_'+t1+'.nii')
+                    Fullsize_1 = niftiread(addr1 + 'Fullsize_label_' + t1 + '.nii')
+                    Fullsize_regression_1 = niftiread(addr1 + 'Weights_' + t1 + '.nii')
                 else:
-                    Fullsize_1 = niftiread(addr1 + 'Fullsize_2_aftertracking_'+t1+'.nii')
-                    Fullsize_regression_1 = niftiread(addr1+'Weights_'+t1+'.nii')
+                    Fullsize_1 = niftiread(addr1 + 'Fullsize_2_aftertracking_' + t1 + '.nii')
+                    Fullsize_regression_1 = niftiread(addr1 + 'Weights_' + t1 + '.nii')
 
-                correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1,Fullsize_regression_2, t2, i1, spatial_extend_matrix, addr2, padding)
+                correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regression_2, t2, i1, spatial_extend_matrix, addr2, padding)
                 dashline()
 
         else:
-            for i1 in range(1, trackbackT+1):
-                Fullsize_2 = niftiread(addr2+'Fullsize_label_' + t2+'.nii')
-                Fullsize_regression_2 = niftiread(addr2+'Weights_'+t2+'.nii')
-                Fullsize_1 = niftiread(addr1+'Fullsize_2_aftertracking_'+t1+'.nii')
-                Fullsize_regression_1 = niftiread(addr1+'Weights_'+t1+'.nii')
-                correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1,Fullsize_regression_2, t2, i1, spatial_extend_matrix, addr2, padding)
+            for i1 in range(1, trackbackT + 1):
+                Fullsize_2 = niftiread(addr2 + 'Fullsize_label_' + t2 + '.nii')
+                Fullsize_regression_2 = niftiread(addr2 + 'Weights_' + t2 + '.nii')
+                Fullsize_1 = niftiread(addr1 + 'Fullsize_2_aftertracking_' + t1 + '.nii')
+                Fullsize_regression_1 = niftiread(addr1 + 'Weights_' + t1 + '.nii')
+                correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regression_2, t2, i1,
+                            spatial_extend_matrix, addr2, padding)
                 dashline()
 
         # del Fullsize_1, Fullsize_regression_1,Fullsize_2, Fullsize_regression_2#, Fullsize_1_padding, Fullsize_2_padding, \
@@ -129,48 +148,63 @@ def trackStep2():
 
         # plot tracking
         t1 = str(time)
-        t2 = str(time+1)
+        t2 = str(time + 1)
 
         # read the correlation calculation results
-        correlation_map_padding_show1 = niftiread(folder + t2 + '/' + 'correlation_map_padding_show_traceback1_' + t2 + '.nii')
-        correlation_map_padding_hide1 = niftiread(folder + t2 + '/' + 'correlation_map_padding_hide_traceback1_' + t2 + '.nii')
+        correlation_map_padding_show1 = niftiread(
+            folder + t2 + '/' + 'correlation_map_padding_show_traceback1_' + t2 + '.nii')
+        correlation_map_padding_hide1 = niftiread(
+            folder + t2 + '/' + 'correlation_map_padding_hide_traceback1_' + t2 + '.nii')
 
-        if time-initialpoint < trackbackT and time > initialpoint:
-            for i1 in range(1, time-initialpoint+1):
+        # Reading centroids
+
+        if time - initialpoint < trackbackT and time > initialpoint:
+            for i1 in range(1, time - initialpoint + 1):
                 Registration1 = niftiread(folder + t1 + '/' + 'Registration2_tracking_' + t1 + '.nii')
-                correlation_map_padding_show1_2 = niftiread(folder+t2+'/'+'correlation_map_padding_show_traceback' + str(i1) + '_' + t2 + '.nii')
-                correlation_map_padding_hide1_2 = niftiread(folder + t2 + '/' + 'correlation_map_padding_hide_traceback' + str(i1)+'_'+t2+'.nii')
-                for i2 in range(1, I3dw[0]+padding[0]*2 + 1):  # +1 because python
-                    for i3 in range(1, I3dw[1]+padding[1]*2 + 1):
-                        for i4 in range(1, I3dw[2]+padding[2]*2 + 1):
-                            if correlation_map_padding_hide1[i2, i3, i4] < correlation_map_padding_hide1_2[i2,i3,i4] and correlation_map_padding_show1_2[i2, i3, i4] != 0:
-                                correlation_map_padding_show1[i2, i3, i4] = correlation_map_padding_show1_2[i2,i3,i4]
-        elif time-initialpoint >= trackbackT and time > initialpoint:
-            for i1 in range(2, trackbackT+1):
-                Registration1 = niftiread(folder + t1 + '/' + 'Registration2_tracking_'+ t1 + '.nii')
-                correlation_map_padding_show1_2 = niftiread(folder + t2 + '/' + 'correlation_map_padding_show_traceback' + str(i1) + '_' + t2 +'.nii')
-                correlation_map_padding_hide1_2 = niftiread(folder + t2 + '/' + 'correlation_map_padding_hide_traceback' + str(i1)+'_'+t2+'.nii')
-                for i2 in range(1, I3dw[0]+padding[0]*2 + 1):  # +1 because python
-                    for i3 in range(1, I3dw[1]+padding[1]*2 + 1):
-                        for i4 in range(1, I3dw[2]+padding[2]*2 + 1):
-                            if correlation_map_padding_hide1[i2, i3, i4] < correlation_map_padding_hide1_2[i2, i3, i4] and correlation_map_padding_show1_2[i2, i3, i4] != 0:
+                correlation_map_padding_show1_2 = niftiread(
+                    folder + t2 + '/' + 'correlation_map_padding_show_traceback' + str(i1) + '_' + t2 + '.nii')
+                correlation_map_padding_hide1_2 = niftiread(
+                    folder + t2 + '/' + 'correlation_map_padding_hide_traceback' + str(i1) + '_' + t2 + '.nii')
+
+                for i2 in range(0, I3dw[0] + padding[0] * 2):  # 0 because python
+                    for i3 in range(0, I3dw[1] + padding[1] * 2):
+                        for i4 in range(0, I3dw[2] + padding[2] * 2):
+                            if correlation_map_padding_hide1[i2, i3, i4] < correlation_map_padding_hide1_2[
+                                i2, i3, i4] and correlation_map_padding_show1_2[i2, i3, i4] != 0:
+                                correlation_map_padding_show1[i2, i3, i4] = correlation_map_padding_show1_2[i2, i3, i4]
+        elif time - initialpoint >= trackbackT and time > initialpoint:
+            for i1 in range(2, trackbackT + 1):
+                Registration1 = niftiread(folder + t1 + '/' + 'Registration2_tracking_' + t1 + '.nii')
+                correlation_map_padding_show1_2 = niftiread(
+                    folder + t2 + '/' + 'correlation_map_padding_show_traceback' + str(i1) + '_' + t2 + '.nii')
+                correlation_map_padding_hide1_2 = niftiread(
+                    folder + t2 + '/' + 'correlation_map_padding_hide_traceback' + str(i1) + '_' + t2 + '.nii')
+                for i2 in range(0, I3dw[0] + padding[0] * 2):  # 0 because python
+                    for i3 in range(0, I3dw[1] + padding[1] * 2):
+                        for i4 in range(0, I3dw[2] + padding[2] * 2):
+                            if correlation_map_padding_hide1[i2, i3, i4] < correlation_map_padding_hide1_2[
+                                i2, i3, i4] and correlation_map_padding_show1_2[i2, i3, i4] != 0:
                                 correlation_map_padding_show1[i2, i3, i4] = correlation_map_padding_show1_2[i2, i3, i4]
         else:
             Registration1 = niftiread(folder + t1 + '/' + 'Registration_' + t1 + '.nii')
-
+            # print('here')
+        # -----------------------------------------------------------Good Until Here---------------------------------------------------------------------------------------------
         # Read segmentation
-        Fullsize_2 = niftiread(folder + t2 + '/Fullsize_' + t2 + '.nii').asType(bool)
+        Fullsize_2 = niftiread(folder + t2 + '/Fullsize_label_' + t2 + '.nii').astype(int)
         Fullsize_2_2 = np.zeros(shape=(np.shape(Fullsize_2)))
 
         # crop the expanded sample to its original size
-        correlation_map_padding_show2 = correlation_map_padding_show1[21:-1*padding[0], 21:-1*padding[1], 3:-1*padding[2]]
+        correlation_map_padding_show2 = correlation_map_padding_show1[padding[0]:-1 * padding[0], padding[1]:-1 * padding[1],
+                                        padding[2]:-1 * padding[2]]
         Fullsize_2_mark = correlation_map_padding_show2
 
         if time > initialpoint:
-            correlation_map_padding_show2_2 = correlation_map_padding_show1_2[21:-1*padding[0], 21:-1*padding[1], 3:-1*padding[2]]
+            correlation_map_padding_show2_2 = correlation_map_padding_show1_2[20:-1 * padding[0], 20:-1 * padding[1],
+                                              2:-1 * padding[2]]
             Fullsize_1 = correlation_map_padding_show2_2
             Fullsize_1[Fullsize_1 == 0] = np.nan
-            #if not initial time point, read the fusion data of last time point
+
+            # if not initial time point, read the fusion data of last time point (saved in the same folder as this time point, t1)
 
             # detector_fusion_old=load(strcat('D:\NEW\',folder,'\',t1,'\fusion_tracking_',t1,'.mat'),'detector3_fusion');
             # for i1=2:2:size(detector_fusion_old.detector3_fusion,1)
@@ -178,23 +212,33 @@ def trackStep2():
             # end
 
             # ------------------------------------------------------------------
-            detector_fusion_old = scio.loadmat(folder+t1+'/'+'fusion_tracking_'+t1+'.mat', 'detector3_fusion')
-            for i1 in range(2,np.size(detector_fusion_old.detector3_fusion, axis=0)+1,2):
-                detector_fusion_old.detector3_fusion[i1,:] = 0
 
-            Fullsize_2_mark[Fullsize_2 == 0] = 0
-            # ------------------------------------------------------------------
+            # detector_fusion_old = scio.loadmat(folder + t1 + '/' + 'fusion_tracking_' + t1 + '.mat', 'detector3_fusion')
 
-        del correlation_map_padding_show1, correlation_map_padding_show1_2, correlation_map_padding_hide1, correlation_map_padding_hide1_2
+            detector_fusion_old = scio.loadmat(folder + t1 + '/' + 'fusion_tracking_' + t1 + '.mat')
+
+            for i1 in range(1, np.size(detector_fusion_old['detector3_fusion'], axis=0) + 1, 2):
+                detector_fusion_old['detector3_fusion'][i1, :] = 0
+
+            # print(detector_fusion_old['detector3_fusion'])
+
+
+        # niftiwrite(Fullsize_2_mark, '/home/nirvan/Desktop/f2mbefore.nii')
+        Fullsize_2_mark[Fullsize_2 == 0] = 0
+        # niftiwrite(Fullsize_2_mark,'/home/nirvan/Desktop/f2m.nii')
+            # ------------------------------- OK Tested Until Here-----------------------------------
+
+        # del correlation_map_padding_show1, correlation_map_padding_show1_2, correlation_map_padding_hide1, correlation_map_padding_hide1_2
 
         # Get the object characteristics
-        Fullsize_2_mark_BW = Fullsize_2_mark
-        Fullsize_2_mark_BW[Fullsize_2_mark_BW > 0] = 1
-        Fullsize_2_mark_BW = Fullsize_2_mark_BW.astype(bool)
-        Fullsize_2_mark_label, orgnum = measure.label(Fullsize_2_mark, connectivity=1, return_num=True)
+        # Fullsize_2_mark_BW = Fullsize_2_mark
+        # Fullsize_2_mark_BW[Fullsize_2_mark_BW > 0] = 1
+        # Fullsize_2_mark_BW = Fullsize_2_mark_BW.astype(bool)
+        # Fullsize_2_mark_label, orgnum = measure.label(Fullsize_2_mark, connectivity=1, return_num=True)
 
         # stats1 = regionprops3(Fullsize_2,'BoundingBox','VoxelList','ConvexHull','Centroid');
-        stats1 = pd.DataFrame(measure.regionprops_table(Fullsize_2, properties=('label', 'bbox', 'coords', 'centroid')))
+        stats1 = pd.DataFrame(
+            measure.regionprops_table(Fullsize_2.astype(int), properties=('label', 'bbox', 'coords', 'centroid')))
         VoxelList = stats1.coords
 
         #  sort the objects in descending order of size
@@ -205,176 +249,393 @@ def trackStep2():
         stats1['Count'] = count.astype(int)
 
         stats2 = stats1.sort_values(by='Count', axis=0, ascending=False, ignore_index=False)
+        print(f'object count {np.amax(stats2.label)}')
 
-        detector_fusion = []
-        detector_split = []
-        detector2_fusion = []
-        detector2_split = []
+        # -----
+        detector_fusion = {}
+        detector_split = {}
+        detector2_fusion = {}
+        detector3_fusion = {}
 
         # stack_after_label[Fullsize_2_mark > 0] = 0  Not used, not initialized
+        Fullsize_2_mark = Fullsize_2_mark.astype(float)
 
-        Fullsize_2_mark[Fullsize_2_mark == 0] = 0
+        Fullsize_2_mark[Fullsize_2_mark == 0] = np.nan
 
         # Initialize new Registration variables
         newc = 0
         l = np.size(Registration1, axis=0)
-        Registration2 = [[]]
-        detector_old = []
-        detector_new = []
-        detector_numbering = []
-        c1 = 1
+        Registration2 = {}
+        detector_old = {}
+        detector_new = {}
+        detector_numbering = {}
+        c1 = 0
         c2 = 0
-        c3 = 1
+        c3 = 0
         c_numbering = 0
-        cc = []
+        cc = {}
 
         # Tracking each object
-        xlswriter1 = nan_2d(20000, endpoint*2)
-        xlswriter2 = np.zeros((endpoint, 5))
-        xlswriter3 = nan_2d(20000, endpoint*2)
-        xlswriter4 = nan_2d(20000, endpoint * 2)
-        xlswriter5 = nan_2d(20000, endpoint * 2)
-        xlswriter6 = nan_2d(20000, endpoint * 2)
-        xlswriter7 = nan_2d(20000, endpoint * 2)
-        xlswriter8 = nan_2d(20000, endpoint * 2)
-        xlswriter9 = nan_2d(20000, endpoint * 2)
-        xlswriter10 = nan_2d(20000, endpoint * 2)
-        xlswriter11 = nan_2d(20000, endpoint * 2)
-        xlswriter12 = nan_2d(20000, endpoint * 2)
+        xlswriter1 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter2 = pd.DataFrame(np.zeros((endpoint, 5)))
+        xlswriter3 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter4 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter5 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter6 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter7 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter8 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter9 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter10 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter11 = pd.DataFrame(nan_2d(20000, endpoint * 2))
+        xlswriter12 = pd.DataFrame(nan_2d(20000, endpoint * 2))
 
+        print(stats2.shape[0])
 
-        for i in range(stats2.shape[0]):
+        for i in range(stats2.shape[0]): # For each object in stats2 --------------------------------------------------------------------------------
+            # print(f'Obj No. {i+1} (i)')
             max_object_intensity1 = 0
             max_object_intensity2 = 0
             b = stats2.coords[i]
-            if time+1 < 10:
+            if time + 1 < 10:
                 ttag = '00'
-            elif time+1 < 100:
+            elif time + 1 < 100:
                 ttag = '0'
             else:
                 ttag = ''
 
-            threeDimg1 = niftiread('/home/nirvan/Desktop/Projects/EcadMyo_08_all/3DImage/' + 'EcadMyo_08/' + 'Ecad/' + 'threeDimg_' +
-                                   ttag + str(time+1) + '.nii')
-            threeDimg2 = niftiread('/home/nirvan/Desktop/Projects/EcadMyo_08_all/3DImage/' + 'EcadMyo_08/' + 'Myo/' + 'threeDimg_' +
-                                   ttag + str(time+1) + '.nii')
-            threeDimgPixelList1 = []
-            threeDimgPixelList2 = []
+            threeDimg1 = niftiread(
+                '/home/nirvan/Desktop/Projects/EcadMyo_08_all/3DImage/' + 'EcadMyo_08/' + 'Ecad/' + 'threeDimg_' +
+                ttag + str(time + 1) + '.nii')
+            threeDimg2 = niftiread(
+                '/home/nirvan/Desktop/Projects/EcadMyo_08_all/3DImage/' + 'EcadMyo_08/' + 'Myo/' + 'threeDimg_' +
+                ttag + str(time + 1) + '.nii')
 
-            for i1 in range(np.size(b,axis=0)):
-                threeDimgPixelList1.append(threeDimg1[b[i1, 0], b[i1, 1], b[i1, 2]])
-                threeDimgPixelList2.append(threeDimg2[b[i1, 0], b[i1, 1], b[i1, 2]])
+            threeDimgPixelList1 = {}
+            threeDimgPixelList2 = {}
 
-                if threeDimg1[b[i1,0],b[i1,1],b[i1,2]] > max_object_intensity1:
-                    max_object_intensity1 = threeDimg1[b[i1,0],b[i1,1],b[i1,2]]
+            for i1 in range(np.size(b, axis=0)):
+                threeDimgPixelList1[i1] = threeDimg1[b[i1, 0], b[i1, 1], b[i1, 2]]
+                threeDimgPixelList2[i1] = threeDimg2[b[i1, 0], b[i1, 1], b[i1, 2]]
 
-                if threeDimg2[b[i1,0],b[i1,1],b[i1,2]] > max_object_intensity1:
-                    max_object_intensity2 = threeDimg2[b[i1,0],b[i1,1],b[i1,2]]
+                if threeDimg1[b[i1, 0], b[i1, 1], b[i1, 2]] > max_object_intensity1:
+                    max_object_intensity1 = threeDimg1[b[i1, 0], b[i1, 1], b[i1, 2]]
+
+                if threeDimg2[b[i1, 0], b[i1, 1], b[i1, 2]] > max_object_intensity1:
+                    max_object_intensity2 = threeDimg2[b[i1, 0], b[i1, 1], b[i1, 2]]
 
             threeDimgPixelList1 = sorted(threeDimgPixelList1, reverse=True)
             threeDimgPixelList2 = sorted(threeDimgPixelList2, reverse=True)
 
             # Average the pixels to get average object intensity
-            average_object_intensity1 = sum(threeDimgPixelList1)/np.size(threeDimgPixelList1)
-            average_object_intensity2 = sum(threeDimgPixelList2)/np.size(threeDimgPixelList2)
+            average_object_intensity1 = sum(threeDimgPixelList1) / np.size(b, axis=0)
+            average_object_intensity2 = sum(threeDimgPixelList2) / np.size(b, axis=0)
 
-            a = []
-            a_t_1 = []
-            k = boundary(b)                                                                         ### RRR
-            for i1 in range(np.size(b,axis=0)):
-                a.append(Fullsize_2_mark[b[i1,0],b[i1,1],b[i1,2]])
-            value = statistics.mode(np.array(a).flatten())
-            u, c = np.unique(np.array(a), return_counts=True)
-            Value_f = dict(zip(u, c))[value]
+            a = {}
+            a_t_1 = {}
+            # k = boundary(b)                                                                         ### RRR
 
-            countnan = a.count(np.nan)
-            if countnan > Value_f:
-                value = np.nan
+            for i1 in range(np.size(b, axis=0)): # for each pixel in object b
+                # print(b[i1, 0], b[i1, 1], b[i1, 2])
+                # print(Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]])
+                a[i1] = Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] # add the value of that pixel in Fullsize_2_mark (i.e. the show-file cropped and mapped to t2 label file) to a
 
-            if time > startpoint:
-                for i1 in range(np.size(b,axis=0)):
-                    a_t_1.append(Fullsize_1[b[i1,0],b[i1,1],b[i1,2]])
+            datta = np.array(list(a.values()))
+            value = statistics.mode(datta.flatten())
 
-                value_t_1 = statistics.mode(np.array(a_t_1).flatten())
-                u, c = np.unique(np.array(a_t_1), return_counts=True)
-                Value_f_t_1 = dict(zip(u, c))[value_t_1]
-            
-            # Check whether the object has already merged in the last time point
-            if not np.isnan(value_t_1) and isempty(intersect(value_t_1, Registration1[:,0])) \
-                    and not isempty(intersect(value_t_1, detector_fusion_old.detector3_fusion)): # merge happened in last time point
-                detector_numbering.append([value, value_t_1])
-                value = value_t_1
-                print(value)
-            # Check whether the object has alreadybeen tracked in the current time point
-            if not isempty(intersect(value, np.array(Registration2)[:, 0])):
-                value2 = setdiff(a, np.array(Registration2)[:, 0])
+            value = np.nan if np.count_nonzero(np.isnan(datta)) > np.count_nonzero(datta==value) else value
 
-                if not isempty(value2) and np.size(value2, axis=1) > 0 and not isempty(intersect(value2, Registration1[:,0])):
-                    value = value2[1, math.ceil(rand()*np.size(value2, axis=1))]
+            # if (np.isnan(value)):
+            #     print('-------nan--------')
+
+            if time > startpoint:    #Deal with fusion from previous time points
+                for i1 in range(np.size(b, axis=0)):
+                    a_t_1[i1] = Fullsize_1[b[i1, 0], b[i1, 1], b[i1, 2]]
+                    # ----
+                datta = np.array(list(a_t_1.values()))
+                value_t_1 = statistics.mode(datta.flatten())
+                Value_f_t_1 = np.count_nonzero(datta.flatten() == value_t_1)
+                # Check whether the object has already merged in the last time point
+                if not np.isnan(value_t_1) and isempty(intersect(value_t_1, np.array(Registration1[:, 0]))) \
+                        and not isempty(
+                    intersect(value_t_1, detector_fusion_old['detector3_fusion'])):  # merge happened in last time point
+                    detector_numbering[c_numbering] = [value, value_t_1]
+                    value = value_t_1
+                    c_numbering = c_numbering + 1
+                    # print(value)
+
+            # print(f'Registration2 keys:')
+            # print(np.array(list(Registration2.keys())))
+
+            # Check whether the object has already been tracked in the current time point
+            if not isempty(intersect(value, np.array(list(Registration2.values())))):
+                value2 = setdiff(np.array(list(a.values())), np.array(list(Registration2.values()))[:,0])
+
+                if not isempty(value2) and np.size(value2) > 0 and not isempty(intersect(value2, Registration1[:, 0])):
+                    value = value2[math.floor(rand() * np.size(value2))]
+
+            if not np.isnan(value):
+                value = int(value)
 
             # If the representatiove of an object is NaN, it means that it is a new object, Assign new ID to it
 
             if np.isnan(value):
                 color = [0, 0, 0]
                 newc += 1
-                Registration2.append([newc, stats2['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]])
-                value = newc
-                # Reassign new labells to the sample
-                for i1 in range(np.size(b,axis=0)):
-                    Fullsize_2_mark[b[i1,0],b[i1,1],b[i1,2]] = value
-                    Fullsize_2_2[b[i1,0],b[i1,1],b[i1,2]] = value
+                # print(f'new object {l + newc}')
+                Registration2[l+newc] = [l+newc, stats2['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]]
+                value = l + newc
+                # Reassign new labels to the sample
+                for i1 in range(np.size(b, axis=0)):
+                    Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] = value
+                    Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = value
 
                 txt = 'NEW ' + str(value)
-                detector_new.append(value)
+                detector_new[c1] = (value)
+                c1 += 1
+
 
                 # Document the object characteristics
-                xlswriter1[newc, time*2-2] = 'new'
-                xlswriter1[newc, time*2-1] = str(newc)
+                xlswriter1.iloc[newc, time * 2 - 2] = 'new'
+                xlswriter1.iloc[newc, time * 2 - 1] = str(newc)
 
-                xlswriter3[newc, time*2-1] = str(max_object_intensity1)
-                xlswriter4[newc, time * 2 - 1] = str(average_object_intensity1)
-                xlswriter5[newc, time * 2 - 1] = str(np.size(b, axis=0))
+                xlswriter3.iloc[newc, time * 2 - 1] = str(max_object_intensity1)
+                xlswriter4.iloc[newc, time * 2 - 1] = str(average_object_intensity1)
+                xlswriter5.iloc[newc, time * 2 - 1] = str(np.size(b, axis=0))
 
-                xlswriter6[newc, time * 2 - 1] = str(stats2['centroid-0'][i])
-                xlswriter7[newc, time * 2 - 1] = str(stats2['centroid-1'][i])
-                xlswriter8[newc, time * 2 - 1] = str(stats2['centroid-2'][i])
+                xlswriter6.iloc[newc, time * 2 - 1] = str(stats2['centroid-0'][i])
+                xlswriter7.iloc[newc, time * 2 - 1] = str(stats2['centroid-1'][i])
+                xlswriter8.iloc[newc, time * 2 - 1] = str(stats2['centroid-2'][i])
 
-                xlswriter11[newc, time * 2 - 1] = str(max_object_intensity2)
-                xlswriter12[newc, time * 2 - 1] = str(average_object_intensity2)
+                xlswriter11.iloc[newc, time * 2 - 1] = str(max_object_intensity2)
+                xlswriter12.iloc[newc, time * 2 - 1] = str(average_object_intensity2)
 
-                draw_text(value) = text(b(end, 1), b(end, 2), b(end, 3), txt, 'Rotation', +15)              # RRR
+                # draw_text(value) = text(b(end, 1), b(end, 2), b(end, 3), txt, 'Rotation', +15)              # RRR
 
             # if the representative is not a NaN, it means we find a tracking
-            elif value > 0 and not np.isnan(value):
-                if isempty(intersect(value,np.array(Registration2)[:,0])):
-                    color = map(value,1:3)                                                                  # RRR
+            elif not np.isnan(value) and value > 0:
+                if isempty(intersect(value, np.array(list(Registration2.keys())))):       # if value is already not in Registration 2,
 
-                    Registration2[value][0] = value
-                    Registration2[value][1:4]= [stats2['centroid-0'][value],stats2['centroid-1'][value],stats2['centroid2'][value]]
-
-                    txt = 'OLD ' + str(value)
-
+                    Registration2[value] = [value, stats2['centroid-0'][i], stats2['centroid-1'][i], stats2['centroid-2'][i]]
                     # Reassign new labels to the sample
-                    for i1 in range(np.size(b,axis=0)):
-                        Fullsize_2_2[b[i1,0],b[i1,1], b[i1,2]] = value
+                    for i1 in range(np.size(b, axis=0)):
+                        Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = value
 
-                    detector_old[c2][0] = value
+                    detector_old[c2] = value
+
+
+                    # print(f'value {value} time {time}')    # -------------
                     c2 += 1
-                    xlswriter1[value,time*2-2] = str(value)
-                    xlswriter1[value,time*2-1] = str(value)
-                    xlswriter3[newc, time * 2 - 1] = str(max_object_intensity1)
+                    tx = time*2-2
+                    xlswriter1.iloc[value, tx] = str(value)
+                    xlswriter1.iloc[value, time * 2 - 1] = str(value)
+                    xlswriter3.iloc[newc, time * 2 - 1] = str(max_object_intensity1)
 
-                    xlswriter4[newc, time * 2 - 1] = str(average_object_intensity1)
-                    xlswriter5[newc, time * 2 - 1] = str(np.size(b, axis=0))
+                    xlswriter4.iloc[newc, time * 2 - 1] = str(average_object_intensity1)
+                    xlswriter5.iloc[newc, time * 2 - 1] = str(np.size(b, axis=0))
 
-                    xlswriter6[newc, time * 2 - 1] = str(stats2['centroid-0'][i])
-                    xlswriter7[newc, time * 2 - 1] = str(stats2['centroid-1'][i])
-                    xlswriter8[newc, time * 2 - 1] = str(stats2['centroid-2'][i])
+                    xlswriter6.iloc[newc, time * 2 - 1] = str(stats2['centroid-0'][i])
+                    xlswriter7.iloc[newc, time * 2 - 1] = str(stats2['centroid-1'][i])
+                    xlswriter8.iloc[newc, time * 2 - 1] = str(stats2['centroid-2'][i])
 
-                    xlswriter11[newc, time * 2 - 1] = str(max_object_intensity2)
-                    xlswriter12[newc, time * 2 - 1] = str(average_object_intensity2)
+                    xlswriter11.iloc[newc, time * 2 - 1] = str(max_object_intensity2)
+                    xlswriter12.iloc[newc, time * 2 - 1] = str(average_object_intensity2)
 
-                    draw_forsure = 0                                                                  #### RRR
+                    draw_forsure = 0  #### RRR
 
+                #
+                # Draw code goes here. I'm confused.
+
+                # If the representative is not NaN but is zero, it indicates a split (Actually, if the correlation is there but the object id is already in Registration2)
+                else:
+                    # color = map(value,1:3)
+                    newc += 1
+                    Registration2[l+newc]= [l+newc, stats2['centroid-0'][i], stats2['centroid-1'][i],
+                                                stats2['centroid-2'][i]]
+                    detector_split[c3]=[value, l+newc]
+                    c3 += 1
+                    # print(f'split tracked {value} to {value} and {l+newc} at coordinates {Registration2[l+newc]}')
+
+                    xlswriter10.iloc[value, time * 2 - 1] = str(value)
+                    xlswriter10.iloc[newc, time * 2 - 1] = str(value)
+                    # Reassign new labels to the sample
+                    for i1 in range(np.size(b, axis=0)):
+                        Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = l+newc
+                        Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] = l+newc
+
+                    for ix in range((time - 1) * 2):
+                        xlswriter1.iloc[newc, ix] = xlswriter1.iloc[value, ix]
+                    var = (time - 1) * 2 - 1
+                    xlswriter1.iloc[newc, var] = value
+                    xlswriter1.iloc[newc, var] = str(newc)
+                    xlswriter3.iloc[newc, var] = str(max_object_intensity1)
+                    xlswriter4.iloc[newc, var] = str(average_object_intensity1)
+                    xlswriter5.iloc[newc, var] = str(np.size(b, axis=0))
+                    xlswriter6.iloc[newc, var] = str(stats2['centroid-0'][i])
+                    xlswriter7.iloc[newc, var] = str(stats2['centroid-1'][i])
+                    xlswriter8.iloc[newc, var] = str(stats2['centroid-2'][i])
+                    xlswriter11.iloc[newc, var] = str(max_object_intensity2)
+                    xlswriter12.iloc[newc, var] = str(average_object_intensity2)
+
+                    for i2 in range(time * 2):
+                        print(xlswriter1.iloc[value, i2])
+                        if str(xlswriter1.iloc[value, i2]) != "new" and not pd.isna(xlswriter1.iloc[value, i2]):
+                            value = str(xlswriter1.iloc[value, i2])
+                            break
+                    value = l+newc
+        # print(xlswriter1)
+        # print(xlswriter2)
+        # colormap(map)             RRR
+        # print(Registration2)
+        newArr = np.zeros((max(sorted(Registration2)),4))
+
+        for pos in range(max(sorted(Registration2))):
+            if pos in sorted(Registration2):
+                newArr[pos,:]=Registration2[pos]
+        # print(detector_split)
+        # print(newArr)
+
+        # Write the tracking result
+        niftiwriteF(newArr, addr2 + 'Registration2_tracking_' + t2 + '.nii')
+        niftiwriteF(Fullsize_2_2, addr2 + 'Fullsize_2_aftertracking_' + t2 + '.nii')
+
+# ====================== Tracking old and split object is almost done, now time for fusion detection and alarms =============================
+
+        c = 0
+
+        for i1 in range(stats2.shape[0]):  # for each object in stats2
+            b = stats2.coords[i1]
+            UNIQUEcount = {}
+
+            for i2 in range(np.size(b, axis=0)): # for each pixel in b
+                # UNIQUEcount.append(Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]])
+                UNIQUEcount[i2] = 0 if np.isnan(Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]]) else Fullsize_2_mark[b[i2, 0], b[i2, 1], b[i2, 2]]
+
+            uniq, cnts = np.unique(np.array(list(UNIQUEcount.values())), return_counts=True)
+            uniq = uniq.astype(int)
+            # value_counts = np.row_stack((uniq, cnts))
+            # print(f'value_counts {value_counts}') # --
+
+
+            if len(uniq) > 1:  # if length(C) > 1
+                detector_fusion[c] = uniq
+                detector_fusion[c+1] = cnts
+                c += 2
+
+        print(f'detector_fusion ------------------- before arrangement')
+        for ix in range(len(detector_fusion)):
+            print(detector_fusion[ix])
+
+        for i1 in range(0, len(detector_fusion),2):
+            if detector_fusion[i1][0] ==0:
+                detector_fusion[i1 + 1] = detector_fusion[i1 + 1][1:]
+                detector_fusion[i1] = detector_fusion[i1][1:]
+
+        print(f'detector_fusion after arrangement ============')
+        for ix in range(len(detector_fusion)):
+            print(detector_fusion[ix])
+
+        detector2_fusion = detector_fusion
+
+        # Fusion alarm part 2
+        for i1 in range(0, len(detector2_fusion), 2):
+            for i2 in range(len(detector2_fusion[i1])):
+                print(f' i1 {i1} i2 {i2} len {detector2_fusion[i1]}')
+                if not isempty(intersect(detector2_fusion[i1][i2],np.array(list(Registration2.values()))[:,0])):
+                    detector2_fusion[i1][i2] = 0
+                    detector2_fusion[i1+1][i2] = 0
+            for i2 in range(len(detector2_fusion[i1])): # fusion size filter
+                if detector2_fusion[i1+1][i2] < 5:
+                    detector2_fusion[i1][i2] = 0
+                    detector2_fusion[i1+1][i2] = 0
+        print(f'detector2_fusion ------------ after size filter')
+        for ix in range(len(detector2_fusion)):
+            print(detector2_fusion[ix])
+        # for i1 in range(0, len(detector2_fusion), 2): #fusion alarm part 2
+        #     read1 = np.array(list(detector2_fusion[i1]))
+        #     read2 = np.array(list(detector2_fusion[i1+1]))
+        #     # print(f'read1 {read1}')
+        #     for i2 in range(0, np.size(detector2_fusion[i1])):
+        #         # print(detector2_fusion[i1][i2])
+        #         if intersect(detector2_fusion[i1][i2], np.array(list(Registration2.values()))[:,0]):
+        #             read1[i2] = 0
+        #             read2[i2] = 0
+        #     detector2_fusion[i1] = read1
+        #     detector2_fusion[i1+1] = read2
+        #     # print(f'read1 changed {read1}')
+        #     read1 = np.array(list(detector2_fusion[i1]))
+        #     read2 = np.array(list(detector2_fusion[i1 + 1]))
+        #
+        #     for i2 in range(0, np.size(detector2_fusion[i1]), 1): # size filter
+        #         if detector2_fusion[i1 + 1][i2] < 5:
+        #             read1[i2] = 0
+        #             read2[i2] = 0
+        #     detector2_fusion[i1] = read1
+        #     detector2_fusion[i2] = read2
+
+        c = 0
+
+        for i1 in range(0, len(detector2_fusion), 2):
+            if np.count_nonzero(detector2_fusion[i1]) != 0:
+                detector3_fusion[c] = detector_fusion[i1]
+                detector3_fusion[c+1] = detector_fusion[i1+1]
+                # print(detector3_fusion[c])
+                c += 2
+        print(f'detector3_fusion ----------------')
+        for ix in range(len(detector3_fusion)):
+            print(detector3_fusion[ix])
+        # scio.savemat(addr2 + "fusion_tracking_" + t2 + ".mat", fille)
+
+        # Figure code missing
+        #
+        # for i2 in range(0, np.size(detector3_fusion, axis=0), 2):
+        #     detector3_fusion_exist = 0;
+        #     for i1 in range(np.size(detector3_fusion, axis=1)):
+        #         if detector3_fusion[i2, i1] > 0:
+        #             None
+        # dashline()
+        # print(detector3_fusion)
+
+        tempvar = 0
+        sizes={}
+        varT = np.array(list(detector3_fusion.values()))
+        for ixx in range(len(detector3_fusion)):
+            if len(list(detector3_fusion.values())[ixx]) > tempvar:
+                tempvar = len(list(detector3_fusion.values())[ixx])
+                # print(f'tempvar {tempvar}')
+            sizes[ixx]=len(list(detector3_fusion.values())[ixx])
+
+        varx = np.zeros((len(detector3_fusion),tempvar))
+        for ix in range(np.size(varx, axis=0)):
+            for jx in range(np.size(varT[ix])):
+                varx[ix,jx] = varT[ix][jx]
+
+        # print(varx)
+
+        fille = {"detector3_fusion": varx}
+
+        scio.savemat(addr2 + "fusion_tracking_" + t2 + ".mat", fille)
+
+
+    # npz, pickle !!!!!!!!!!!!!!!
+
+    #
+
+
+    writer = pd.ExcelWriter('filename', engine='xlsxwriter')
+
+    xlswriter1.to_excel(writer, sheet_name='Sheet1', startrow=0)
+    xlswriter2.to_excel(writer, sheet_name='Sheet2', startrow=1)
+    xlswriter3.to_excel(writer, sheet_name='Sheet3', startrow=0)
+    xlswriter4.to_excel(writer, sheet_name='Sheet4', startrow=0)
+    xlswriter5.to_excel(writer, sheet_name='Sheet5', startrow=0)
+    xlswriter6.to_excel(writer, sheet_name='Sheet6', startrow=0)
+    xlswriter7.to_excel(writer, sheet_name='Sheet7', startrow=0)
+    xlswriter8.to_excel(writer, sheet_name='Sheet8', startrow=0)
+    xlswriter9.to_excel(writer, sheet_name='Sheet9', startrow=0)
+    xlswriter10.to_excel(writer, sheet_name='Sheet10', startrow=0)
+    xlswriter11.to_excel(writer, sheet_name='Sheet11', startrow=0)
+    xlswriter12.to_excel(writer, sheet_name='Sheet12', startrow=0)
 
     workbook.close()
+
+# USE DICTIONARY!!!!!!!!!!!!!!!!!!!!!

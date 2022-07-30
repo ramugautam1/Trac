@@ -10,6 +10,7 @@ from functions import rand, size3, niftiwrite, niftiread, dashline, starline, ni
 
 def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regression_2,
                 t2, time, spatial_extend_matrix, addr2, padding):
+    # return
     Fullsize_1 = Fullsize_1.astype(int)
     Fullsize_2 = Fullsize_2.astype(int)
     # Fullsize_regression_1 = Fullsize_regression_1.astype(int)
@@ -17,7 +18,7 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
 
     depth = np.size(Fullsize_regression_1, axis=3)
 
-    print('\nCalculating Correlation  ', end='')
+
 
 
     # get the size of sample
@@ -46,13 +47,16 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
 
     stats1 = pd.DataFrame(measure.regionprops_table(Fullsize_1_padding, properties=('label', 'coords')))
     VoxelList = stats1.coords
-    print(VoxelList.shape[0])
+    # print(VoxelList.shape[0])
+    print(stats1.shape[0])
 
-    for i in range(0, VoxelList.shape[0]):
+    print('\nCalculating Correlation  ', end='')
+
+    for i in range(0, stats1.shape[0]):
 
         VLi_size = np.size(VoxelList[i], axis=0)
 
-        if(i%25)==0:
+        if i % (math.floor(stats1.shape[0]/10))==0:
             print('###', end='')
 
         if VLi_size < 30:
@@ -118,6 +122,8 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                                 # print(Fullsize_1_label[b[i1][0], b[i1][1], b[i1][2]])
                                 a.append(Fullsize_1_label[b[i1][0], b[i1][1], b[i1][2]])
 
+                            # print(f'a ------- {a}')
+
                             value = statistics.mode(np.array(a).flatten())
 
                             u, c = np.unique(np.array(a), return_counts=True)
@@ -145,7 +151,7 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
 
                             # only select the highest correlation and assign the label
 
-                            correlation_map_padding_show_local[correlation_map_padding_show_local < corr] = value
+                            correlation_map_padding_show_local[correlation_map_padding_corr_local < corr] = value
                             correlation_map_padding_corr_local[correlation_map_padding_corr_local < corr] = corr
 
                             correlation_map_padding_corr[

@@ -25,12 +25,12 @@ from functions import niftiwrite, dashline, starline, niftiwriteF
 def trackStep1():
 
     starline()
-    print('step 1 start')
+    print('                    step 1 start          ')
     starline()
     tictic = datetime.now()
 
     colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
-    t1 = 1
+    t1 = 35
     t2 = 41
     # t2 = 1
     # size of image, size of cuboids
@@ -38,11 +38,12 @@ def trackStep1():
     I3d = [32, 35, I3dw[2]]
     # for time in range(t1 - 1, t2):
     for time in range(t1, t2 + 1):
+        print(f'    time point   {time}')
         tic = datetime.now()
         tt = str(time)
         addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
         print(addr)
-        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08_Tracking_Result/' + str(time) + '/'
+        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/' + str(time) + '/'
         print(addr2)
 
         if not os.path.isdir(addr2):
@@ -60,14 +61,21 @@ def trackStep1():
             for i2 in range(0, I3dw[1], I3d[1]):
 
                 V_arr = np.asarray(nib.load(Files1[c_file]).dataobj).astype(np.float32).squeeze()
+                # print(f'shape {np.shape(V_arr)}')
+                # stop
                 V_arr = 1 - V_arr
                 V2_arr = np.uint8(V_arr * 255)
-                V3_arr = resize(V2_arr, I3d, order=0)
+                # V3_arr = resize(V2_arr, I3d, order=0)
+                V3_arr = np.zeros(shape=(32,35,15))
+                # print(np.shape(V2_arr[:,:,4]))
+                for ix in range(15):
+                    V3_arr[:, :, ix] = cv2.resize(V2_arr[:,:,ix], (35, 32), interpolation=cv2.INTER_LINEAR)
 
                 a = i1
                 b = i1 + I3d[0]
                 c = i2
                 d = i2 + I3d[1]
+                # print(a, b, c, d)
 
                 # print(f'{a}:{b}, {c}:{d}, : ')
 
@@ -88,7 +96,7 @@ def trackStep1():
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
-        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 20))
+        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 27))
 
         stack_after = Fullsize2
 
@@ -104,6 +112,32 @@ def trackStep1():
         # stats1 = measure.regionprops_table(stack_after_label, properties=('label', 'bbox', 'centroid'))
         stats1 = pd.DataFrame(measure.regionprops_table(CC, properties=('label', 'bbox', 'centroid', 'coords')))
 
+
+        # vxllst = stats1.coords
+        #
+        # Fullsizex_label = np.zeros((512,280,15))
+        # for i in range(0,stats1.shape[0]):
+        #     for j in range(0,np.size(vxllst[i], axis=0)):
+        #         Fullsizex_label[vxllst[i][j][0],vxllst[i][j][1],vxllst[i][j][2]] = stats1.label[i]
+        #
+        # print(stats1[200:300])
+        #
+        # niftiwrite(Fullsizex_label,addr2 + 'Fullsizex_label_' + tt + '.nii')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         nib.save(nib.Nifti1Image(np.uint32(stack_after_label), affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
 
         niftiwrite(Fullsize2, addr2 + 'Fullsize' + '_' + tt + '.nii')
@@ -117,6 +151,7 @@ def trackStep1():
 
         VoxelList = stats1.coords
 
+
         # myCube = np.zeros(shape=(512,280,15))
         # for i in range(0,voxels.shape[0]):
         #     # c1 = [250-i, 100, 100] if i<255 else [110,300-i,110]
@@ -127,11 +162,14 @@ def trackStep1():
         #             (0, 1, 0), fontsize=5, color = 'red')
         #
         # ax.voxels(myCube)
+        Registration = []
 
         myCube = np.zeros(shape=(512, 280, 15))
-        print('Drawing figure...',end='')
+        print('Drawing figure.', end='')
         for i in range(0, VoxelList.shape[0]):
-            if(i%100 == 0):
+            value = i
+            Registration.append([value, stats1['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]])
+            if(i%200 == 0):
                 print('.', end='')
             # c1 = [250-i, 100, 100] if i<255 else [110,300-i,110]
             s = str(i+1)
@@ -148,6 +186,8 @@ def trackStep1():
         fig.savefig(addr2 + str(time) + '_3Dconnection2' + '.png')
 
         niftiwriteF(Weights, addr2 + 'Weights_' + tt + '.nii')
+
+        niftiwriteF(np.array(Registration), addr2 + 'Registration_' + tt + '.nii')
 
         print('Done.')
 
