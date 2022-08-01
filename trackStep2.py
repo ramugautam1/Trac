@@ -289,7 +289,7 @@ def trackStep2():
         xlswriter11 = pd.DataFrame(nan_2d(20000, endpoint * 2))
         xlswriter12 = pd.DataFrame(nan_2d(20000, endpoint * 2))
 
-        print(stats2.shape[0])
+        # print(stats2.shape[0])
 
         for i in range(stats2.shape[0]): # For each object in stats2 --------------------------------------------------------------------------------
             # print(f'Obj No. {i+1} (i)')
@@ -477,7 +477,7 @@ def trackStep2():
                     xlswriter12.iloc[newc, var] = str(average_object_intensity2)
 
                     for i2 in range(time * 2):
-                        print(xlswriter1.iloc[value, i2])
+                        # print(xlswriter1.iloc[value, i2])
                         if str(xlswriter1.iloc[value, i2]) != "new" and not pd.isna(xlswriter1.iloc[value, i2]):
                             value = str(xlswriter1.iloc[value, i2])
                             break
@@ -512,8 +512,6 @@ def trackStep2():
 
             uniq, cnts = np.unique(np.array(list(UNIQUEcount.values())), return_counts=True)
             uniq = uniq.astype(int)
-            # value_counts = np.row_stack((uniq, cnts))
-            # print(f'value_counts {value_counts}') # --
 
 
             if len(uniq) > 1:  # if length(C) > 1
@@ -530,16 +528,15 @@ def trackStep2():
                 detector_fusion[i1 + 1] = detector_fusion[i1 + 1][1:]
                 detector_fusion[i1] = detector_fusion[i1][1:]
 
-        print(f'detector_fusion after arrangement ============')
-        for ix in range(len(detector_fusion)):
-            print(detector_fusion[ix])
+        # print(f'detector_fusion after arrangement ============')
+        # for ix in range(len(detector_fusion)):
+        #     print(detector_fusion[ix])
 
         detector2_fusion = detector_fusion
 
         # Fusion alarm part 2
         for i1 in range(0, len(detector2_fusion), 2):
             for i2 in range(len(detector2_fusion[i1])):
-                print(f' i1 {i1} i2 {i2} len {detector2_fusion[i1]}')
                 if not isempty(intersect(detector2_fusion[i1][i2],np.array(list(Registration2.values()))[:,0])):
                     detector2_fusion[i1][i2] = 0
                     detector2_fusion[i1+1][i2] = 0
@@ -547,43 +544,27 @@ def trackStep2():
                 if detector2_fusion[i1+1][i2] < 5:
                     detector2_fusion[i1][i2] = 0
                     detector2_fusion[i1+1][i2] = 0
-        print(f'detector2_fusion ------------ after size filter')
+
+        print(f'detector2_fusion ------------ after Fusion alarm and size filter')
         for ix in range(len(detector2_fusion)):
             print(detector2_fusion[ix])
-        # for i1 in range(0, len(detector2_fusion), 2): #fusion alarm part 2
-        #     read1 = np.array(list(detector2_fusion[i1]))
-        #     read2 = np.array(list(detector2_fusion[i1+1]))
-        #     # print(f'read1 {read1}')
-        #     for i2 in range(0, np.size(detector2_fusion[i1])):
-        #         # print(detector2_fusion[i1][i2])
-        #         if intersect(detector2_fusion[i1][i2], np.array(list(Registration2.values()))[:,0]):
-        #             read1[i2] = 0
-        #             read2[i2] = 0
-        #     detector2_fusion[i1] = read1
-        #     detector2_fusion[i1+1] = read2
-        #     # print(f'read1 changed {read1}')
-        #     read1 = np.array(list(detector2_fusion[i1]))
-        #     read2 = np.array(list(detector2_fusion[i1 + 1]))
-        #
-        #     for i2 in range(0, np.size(detector2_fusion[i1]), 1): # size filter
-        #         if detector2_fusion[i1 + 1][i2] < 5:
-        #             read1[i2] = 0
-        #             read2[i2] = 0
-        #     detector2_fusion[i1] = read1
-        #     detector2_fusion[i2] = read2
 
         c = 0
 
         for i1 in range(0, len(detector2_fusion), 2):
-            if np.count_nonzero(detector2_fusion[i1]) != 0:
+            if np.count_nonzero(detector2_fusion[i1]) != 0 and np.count_nonzero(detector_fusion[i1]) > 1:
                 detector3_fusion[c] = detector_fusion[i1]
                 detector3_fusion[c+1] = detector_fusion[i1+1]
                 # print(detector3_fusion[c])
                 c += 2
+
         print(f'detector3_fusion ----------------')
-        for ix in range(len(detector3_fusion)):
+        for ix in range(0,len(detector3_fusion),2):
+            detector3_fusion[ix] = detector3_fusion[ix][detector3_fusion[ix] > 0]
+            detector3_fusion[ix+1] = detector3_fusion[ix+1][detector3_fusion[ix+1] > 0]
             print(detector3_fusion[ix])
-        # scio.savemat(addr2 + "fusion_tracking_" + t2 + ".mat", fille)
+            print(detector3_fusion[ix+1])
+            print('----')
 
         # Figure code missing
         #
@@ -604,7 +585,7 @@ def trackStep2():
                 # print(f'tempvar {tempvar}')
             sizes[ixx]=len(list(detector3_fusion.values())[ixx])
 
-        varx = np.zeros((len(detector3_fusion),tempvar))
+        varx = np.zeros((len(detector3_fusion), tempvar))
         for ix in range(np.size(varx, axis=0)):
             for jx in range(np.size(varT[ix])):
                 varx[ix,jx] = varT[ix][jx]
