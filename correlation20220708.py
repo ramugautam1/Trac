@@ -48,7 +48,7 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
     stats1 = pd.DataFrame(measure.regionprops_table(Fullsize_1_padding, properties=('label', 'coords')))
     VoxelList = stats1.coords
     # print(VoxelList.shape[0])
-    print(stats1.shape[0])
+    # print(stats1.shape[0])
 
     print('\nCalculating Correlation  ', end='')
 
@@ -56,8 +56,8 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
 
         VLi_size = np.size(VoxelList[i], axis=0)
 
-        if i % (math.floor(stats1.shape[0]/10))==0:
-            print('###', end='')
+        if i % (math.floor(stats1.shape[0]/50))==0:
+            print('#', end='')
 
         if VLi_size < 30:
             stepsize = 1
