@@ -17,7 +17,7 @@ from correlation20220708 import correlation
 from functions import dashline, starline, niftiread, niftiwrite, niftiwriteF, intersect, setdiff, isempty, rand, nan_2d
 
 
-def trackStep2():
+def trackStep2(folder, initialpoint=1, startpoint=1, endpoint=40, trackbackT=2):
     starline()  # print **************************************
     print('step 2 start')
     starline()
@@ -26,8 +26,8 @@ def trackStep2():
     padding = [20, 20, 2]
     timm = datetime.now()
 
-    folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/'
-    trackbackT = 2
+    # folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/'
+    # trackbackT = 2
 
     if not os.path.isdir(folder):
         print(os.makedirs(folder))
@@ -55,12 +55,10 @@ def trackStep2():
     worksheet2.write('D1', 'split')
     worksheet2.write('E1', 'fusion')
 
-    print('Excel file created.')
-
     depth = 64  # the deep features to take in correlation calculation
-    initialpoint = 1  # the very first time point of all samples
-    startpoint = 1  # the time point to start tracking
-    endpoint = 40  # the time point to stop tracking
+    # initialpoint = 1  # the very first time point of all samples
+    # startpoint = 1  # the time point to start tracking
+    # endpoint = 10  # the time point to stop tracking
 
     # Tracking each object
     xlswriter1 = pd.DataFrame(nan_2d(20000, endpoint * 2))
@@ -245,7 +243,7 @@ def trackStep2():
         stats1['Count'] = count.astype(int)
 
         stats2 = stats1.sort_values(by='Count', axis=0, ascending=False, ignore_index=False)
-        print(f'objects: { np.size(Registration1,axis=0)} --> {np.amax(stats2.label)} ')
+        print(f'objects found: {np.amax(stats2.label)} previous total: { np.size(Registration1,axis=0)}')
 
         # -----
         detector_fusion = {}
@@ -440,28 +438,28 @@ def trackStep2():
                     c3 += 1
                     # print(f'split tracked {value} to {value} and {l+newc} at coordinates {Registration2[l+newc]}')
 
-                    xlswriter10.iloc[value, time * 2 - 1] = str(value)
-                    xlswriter10.iloc[l+newc, time * 2 - 1] = str(value)
+                    xlswriter10.iloc[value, time * 2 - 1] = value
+                    xlswriter10.iloc[l+newc, time * 2 - 1] = value
                     # Reassign new labels to the sample
                     for i1 in range(np.size(b, axis=0)):
                         Fullsize_2_2[b[i1, 0], b[i1, 1], b[i1, 2]] = l + newc
                         Fullsize_2_mark[b[i1, 0], b[i1, 1], b[i1, 2]] = l + newc
                     for ix in range((time - 1) * 2):
-                        if str(xlswriter1.iloc[value,ix]!="new"):
+                        if str(xlswriter1.iloc[value,ix])!="new":
                             xlswriter1.iloc[l+newc, ix] = xlswriter1.iloc[value, ix]
 
                     var = time * 2 - 1
 
                     xlswriter1.iloc[l+newc, time*2-2] = value
-                    xlswriter1.iloc[l+newc, var] = str(l+newc)
-                    xlswriter3.iloc[l+newc, var] = str(max_object_intensity1)
-                    xlswriter4.iloc[l+newc, var] = str(average_object_intensity1)
-                    xlswriter5.iloc[l+newc, var] = str(np.size(b, axis=0))
-                    xlswriter6.iloc[l+newc, var] = str(stats2['centroid-0'][i])
-                    xlswriter7.iloc[l+newc, var] = str(stats2['centroid-1'][i])
-                    xlswriter8.iloc[l+newc, var] = str(stats2['centroid-2'][i])
-                    xlswriter11.iloc[l+newc, var] = str(max_object_intensity2)
-                    xlswriter12.iloc[l+newc, var] = str(average_object_intensity2)
+                    xlswriter1.iloc[l+newc, var] = l+newc
+                    xlswriter3.iloc[l+newc, var] = max_object_intensity1
+                    xlswriter4.iloc[l+newc, var] = average_object_intensity1
+                    xlswriter5.iloc[l+newc, var] = np.size(b, axis=0)
+                    xlswriter6.iloc[l+newc, var] = stats2['centroid-0'][i]
+                    xlswriter7.iloc[l+newc, var] = stats2['centroid-1'][i]
+                    xlswriter8.iloc[l+newc, var] = stats2['centroid-2'][i]
+                    xlswriter11.iloc[l+newc, var] = max_object_intensity2
+                    xlswriter12.iloc[l+newc, var] = average_object_intensity2
 
                     for i2 in range(time * 2):
                         # print(xlswriter1.iloc[value, i2])
@@ -599,6 +597,11 @@ def trackStep2():
     # writer = pd.ExcelWriter(folder + 'TEST' + str(timm) + '.xlsx', engine='xlsxwriter')
     # with pd.ExcelWriter(folder + 'TEST' + 'xxxxxxxxxx' + '.xlsx') as writer:
     workbook.close()
+
+    print('Excel file created.')
+    print(f'{excelFilename}')
+    print('Saving to Excel.........')
+
     with pd.ExcelWriter(excelFilename, engine="openpyxl", mode="a", if_sheet_exists='overlay') as writer:
 
         xlswriter1.to_excel(writer, sheet_name='Sheet1', startrow=1, index=False, header=False)
