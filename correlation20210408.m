@@ -95,6 +95,7 @@ for i=1:height(stats1)
                             % assign the label
                             correlation_map_padding_show_local(correlation_map_padding_show_local<corr)=value;
                             correlation_map_padding_corr_local(correlation_map_padding_corr_local<corr)=corr;
+                            
                             correlation_map_padding_corr(stats1.VoxelList{i,1}(index,2)+x-3:stats1.VoxelList{i,1}(index,2)+x+3,stats1.VoxelList{i,1}(index,1)+y-3:stats1.VoxelList{i,1}(index,1)+y+3,stats1.VoxelList{i,1}(index,3)+z-1:stats1.VoxelList{i,1}(index,3)+z+1)=correlation_map_padding_corr_local;
                             correlation_map_padding_show(stats1.VoxelList{i,1}(index,2)+x-3:stats1.VoxelList{i,1}(index,2)+x+3,stats1.VoxelList{i,1}(index,1)+y-3:stats1.VoxelList{i,1}(index,1)+y+3,stats1.VoxelList{i,1}(index,3)+z-1:stats1.VoxelList{i,1}(index,3)+z+1)=correlation_map_padding_show_local;                                                       
                         end
