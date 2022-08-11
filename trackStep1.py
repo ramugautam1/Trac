@@ -30,7 +30,7 @@ def trackStep1():
     tictic = datetime.now()
 
     colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
-    t1 = 35
+    t1 = 1
     t2 = 41
     # t2 = 1
     # size of image, size of cuboids
@@ -125,19 +125,6 @@ def trackStep1():
         # niftiwrite(Fullsizex_label,addr2 + 'Fullsizex_label_' + tt + '.nii')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         nib.save(nib.Nifti1Image(np.uint32(stack_after_label), affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
 
         niftiwrite(Fullsize2, addr2 + 'Fullsize' + '_' + tt + '.nii')
@@ -147,7 +134,8 @@ def trackStep1():
         plt.rcParams['figure.dpi'] = 500
 
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(121, projection='3d')
+        ax.set_box_aspect((350,280,15))
 
         VoxelList = stats1.coords
 
@@ -179,12 +167,12 @@ def trackStep1():
                     (0, 1, 0), fontsize=5, color='red')
             ax.text(505,280,14, str(VoxelList.shape[0]), (1,1,1), fontsize=10, color='blue')
 
-        ax.voxels(myCube)
+        ax.voxels(myCube,edgecolors='r')
         print('\nSaving Files...')
         # plt.show()
 
         fig.savefig(addr2 + str(time) + '_3Dconnection2' + '.png')
-
+        # stop
         niftiwriteF(Weights, addr2 + 'Weights_' + tt + '.nii')
 
         niftiwriteF(np.array(Registration), addr2 + 'Registration_' + tt + '.nii')
