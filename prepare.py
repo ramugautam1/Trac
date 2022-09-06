@@ -14,24 +14,26 @@ from skimage.transform import resize
 from tifffile import imsave
 from functions import niftiread, niftiwriteF
 
-def prepare():
+def prepare(imageName, protein1Name, protein2Name):
     # takes the niftii, saves the tif's, saves the 3D images of each channel at all time points
+    originalImageName = os.path.basename(imageName)
+    originalImageAddress = os.path.dirname(imageName)+'/'
     time = 1;
     z = 15;
-    originalImageName = 'EcadMyo_08'
-    originalImageAddress = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/'
+    # originalImageName = 'EcadMyo_08'
+    # originalImageAddress = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/'
     # originalImage = nib.load(originalImageAddress + originalImageName + '.nii')
-    originalImage = niftiread(originalImageAddress+originalImageName+'.nii')
+    originalImage = niftiread(originalImageAddress+originalImageName)
     originalImage = originalImage + 32768
 
     # originalImageFloat32 = np.asarray(originalImage.dataobj).astype(np.float32).squeeze()
-    originalImageFloat32 = np.asarray(nib.load(originalImageAddress + originalImageName + '.nii').dataobj).astype(np.float32).squeeze()
+    originalImageFloat32 = np.asarray(nib.load(originalImageAddress + originalImageName).dataobj).astype(np.float32).squeeze()
 
     print(np.shape(originalImageFloat32))
 
     originalImageSize = np.shape(originalImage);
-    protein1name = 'Ecad'
-    protein2name = 'Myo'
+    protein1name = protein1Name
+    protein2name = protein2Name
 
     if not os.path.isdir(originalImageAddress + "3DImage"):
         os.makedirs(originalImageAddress + "3DImage")
