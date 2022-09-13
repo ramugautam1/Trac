@@ -18,33 +18,44 @@ import matplotlib as mpl
 import cc3d
 from mpl_toolkits.mplot3d import Axes3D
 from datetime import datetime
+from cycler import cycler
 
 from functions import niftiwrite, dashline, starline, niftiwriteF
 
 
-def trackStep1():
+def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endTime):
 
     starline()
-    print('                    step 1 start          ')
+    print('                    step 1 begin          ')
     starline()
     tictic = datetime.now()
 
     colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
-    t1 = 1
-    t2 = 41
+    t1 = startTime
+    t2 = endTime
     # t2 = 1
     # size of image, size of cuboids
     I3dw = [512, 280, 15]
     I3d = [32, 35, I3dw[2]]
+
+    segAddr = segmentationOutputAddress
+    trackAddr = trackingOutputAddress
     # for time in range(t1 - 1, t2):
     for time in range(t1, t2 + 1):
         print(f'    time point   {time}')
         tic = datetime.now()
         tt = str(time)
-        addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
+        # addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
+        # print(addr)
+        # addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/' + str(time) + '/'
+        # print(addr2)
+        addr = segAddr + tt + '/'
+        addr2 = trackAddr + str(time) + '/'
         print(addr)
-        addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/' + str(time) + '/'
         print(addr2)
+
+
+        # originalImage = np.asarray(nib.load('/home/nirvan/Desktop/Projects/EcadMyo_08_all/EcadMyo_08.nii').dataobj).astype(np.float32).squeeze()
 
         if not os.path.isdir(addr2):
             os.makedirs(addr2)
@@ -96,7 +107,7 @@ def trackStep1():
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
-        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 27))
+        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 60))
 
         stack_after = Fullsize2
 
@@ -132,13 +143,15 @@ def trackStep1():
         # code to save 3d figure
         plt.rcParams['figure.figsize'] = (10, 10)
         plt.rcParams['figure.dpi'] = 500
+        default_cycler = cycler(color=[[1, 0, 0, 0.25], [0, 1, 0, 0.5], [0, 0, 1, 0.5], [0, 1, 1, 0.5]])
+        plt.rc('axes', prop_cycle=default_cycler)
 
         fig = plt.figure()
-        ax = fig.add_subplot(121, projection='3d')
-        ax.set_box_aspect((350,280,15))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_box_aspect((350,280,20))
+
 
         VoxelList = stats1.coords
-
 
         # myCube = np.zeros(shape=(512,280,15))
         # for i in range(0,voxels.shape[0]):
@@ -163,16 +176,22 @@ def trackStep1():
             s = str(i+1)
             for j in range(0, np.size(VoxelList[i], axis=0)):
                 myCube[VoxelList[i][j][0], VoxelList[i][j][1], VoxelList[i][j][2]] = i
-            ax.text(VoxelList[i][j][0] + 1, VoxelList[i][j][1] + 1, VoxelList[i][j][2] + 1, s,
-                    (0, 1, 0), fontsize=5, color='red')
-            ax.text(505,280,14, str(VoxelList.shape[0]), (1,1,1), fontsize=10, color='blue')
+            # ax.text(VoxelList[i][j][0] + 1, VoxelList[i][j][1] + 1, VoxelList[i][j][2] + 1, s,
+            #         (0, 1, 0), fontsize=5, color='red')
+            # ax.text(505,280,14, str(VoxelList.shape[0]), (1,1,1), fontsize=10, color='blue')
+        #
+        # for ww in range(512):
+        #     for xx in range(280):
+        #         for zz in range(15):
+        #             myCube[ww, xx, zz] = originalImage[ww,xx,zz,time,1]
 
-        ax.voxels(myCube,edgecolors='r')
+        ax.voxels(myCube)
+
         print('\nSaving Files...')
         # plt.show()
 
         fig.savefig(addr2 + str(time) + '_3Dconnection2' + '.png')
-        # stop
+
         niftiwriteF(Weights, addr2 + 'Weights_' + tt + '.nii')
 
         niftiwriteF(np.array(Registration), addr2 + 'Registration_' + tt + '.nii')

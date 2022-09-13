@@ -17,16 +17,20 @@ from correlation20220708 import correlation
 from functions import dashline, starline, niftiread, niftiwrite, niftiwriteF, intersect, setdiff, isempty, rand, nan_2d
 
 
-def trackStep2(folder, initialpoint=1, startpoint=1, endpoint=40, trackbackT=2):
+def trackStep2(track_op_folder,  imageName, protein1Name, protein2Name, initialpoint=1, startpoint=1, endpoint=40, trackbackT=2):
+    protein1Name = protein1Name
+    protein2Name = protein2Name
+    imageFolder = os.path.dirname(imageName)
+    imageNameOnly = os.path.basename(imageName)
     starline()  # print **************************************
     print('step 2 start')
     starline()
-    colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
+    # colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
     I3dw = [512, 280, 15]
     padding = [20, 20, 2]
     timm = datetime.now()
 
-    # folder = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/'
+    folder = track_op_folder
     # trackbackT = 2
 
     if not os.path.isdir(folder):
@@ -283,10 +287,10 @@ def trackStep2(folder, initialpoint=1, startpoint=1, endpoint=40, trackbackT=2):
                 ttag = ''
 
             threeDimg1 = niftiread(
-                '/home/nirvan/Desktop/Projects/EcadMyo_08_all/3DImage/' + 'EcadMyo_08/' + 'Ecad/' + 'threeDimg_' +
+                imageFolder + '/3DImage/' + imageNameOnly[:-4] + '/' + protein1Name + '/threeDimg_' +
                 ttag + str(time + 1) + '.nii')
             threeDimg2 = niftiread(
-                '/home/nirvan/Desktop/Projects/EcadMyo_08_all/3DImage/' + 'EcadMyo_08/' + 'Myo/' + 'threeDimg_' +
+                imageFolder + '/3DImage/' + imageNameOnly[:-4] + '/' + protein2Name + '/threeDimg_' +
                 ttag + str(time + 1) + '.nii')
 
             threeDimgPixelList1 = {}

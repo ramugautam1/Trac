@@ -13,14 +13,8 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
     # return
     Fullsize_1 = Fullsize_1.astype(int)
     Fullsize_2 = Fullsize_2.astype(int)
-    # Fullsize_regression_1 = Fullsize_regression_1.astype(int)
-    # Fullsize_regression_2 = Fullsize_regression_2.astype(int)
 
     depth = np.size(Fullsize_regression_1, axis=3)
-
-
-
-
     # get the size of sample
     [x, y, z] = size3(Fullsize_1)
     [x_reserve, y_reserve, z_reserve] = size3(Fullsize_1)
@@ -40,8 +34,6 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
     del Fullsize_regression_1, Fullsize_regression_2, Fullsize_1, Fullsize_2
 
     Fullsize_1_label = Fullsize_1_padding
-
-    # print(np.amax(Fullsize_1_padding))
 
     [fx, fy, fz] = size3(Fullsize_1_padding)
 
@@ -75,11 +67,6 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                 index = math.ceil(rand() * VLi_size)
             if index >= VLi_size:
                 index = VLi_size - 1
-
-            # to Feature_map2, copy ==> y component of the pixel - 3 : y component of the pixel + 3, x component of the pixel -3 : x component of the pixel + 3,
-                        #                z component of the pixel -1 : z component of the pixel + 1, all of depth <==of Fullsize_regression_2_padding
-
-            # print(f'i {i} index {index} vox size {VLi_size}')
 
             Feature_map1 = np.copy(Fullsize_regression_1_padding[
                            VoxelList[i][index][0]-3:VoxelList[i][index][0]+3+1,
@@ -133,8 +120,6 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                             except:
                                 countZero = 0
 
-                            # print(f'a-shape: {np.shape(a)} countZero {countZero} value {value}')
-                            # print(a)
 
                             if countZero > value:
                                 value = 0
@@ -165,11 +150,6 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                                                 VoxelList[i][index][1]+y-3:VoxelList[i][index][1]+y+3+1,
                                                 VoxelList[i][index][2]+z-1:VoxelList[i][index][2]+z+1+1] \
                                 = correlation_map_padding_show_local
-                            # print('cor map pad show local shape')
-                            # print(np.shape(correlation_map_padding_show_local))
-
-    # print(np.amax(correlation_map_padding_show))
-    # print(addr2 + 'correlation_map_padding_show_traceback' + str(time) + '_' + t2 + '.nii')
 
     niftiwrite(correlation_map_padding_show,
                addr2+'correlation_map_padding_show_traceback'+str(time)+'_'+t2 + '.nii')
@@ -178,6 +158,5 @@ def correlation(Fullsize_1, Fullsize_2, Fullsize_regression_1, Fullsize_regressi
                 addr2 + 'correlation_map_padding_hide_traceback' + str(time) + '_' + t2 + '.nii')
 
     print('\nfiles saved.')
-    # starline()
 
 
