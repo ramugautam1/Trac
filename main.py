@@ -71,9 +71,10 @@ help_page = tk.Frame(window)
 train_page = tk.Frame(window)
 test_page = tk.Frame(window)
 predict_page = tk.Frame(window)
+cross_corr_page = tk.Frame(window)
 
 def_font = font.Font(family='System')
-for frame in (homepage, seg_page, track_page, fam_page, help_page, train_page, test_page, predict_page):
+for frame in (homepage, seg_page, track_page, fam_page, help_page, train_page, test_page, predict_page,cross_corr_page):
     frame.grid(row=0, column=0, sticky='nsew')
 
 
@@ -96,8 +97,8 @@ ana_menu = tk.Menu(my_menu)
 
 seg_menu = tk.Menu(my_menu)
 
-my_menu.add_cascade(label='File', menu=file_menu)
-my_menu.add_separator()
+# my_menu.add_cascade(label='File', menu=file_menu)
+# my_menu.add_separator()
 my_menu.add_command(label='Home', command=lambda: show_frame(homepage))
 my_menu.add_separator()
 my_menu.add_cascade(label='Segmentation', menu=seg_menu)  # , command=lambda: show_frame(seg_page))
@@ -123,10 +124,10 @@ file_menu.add_command(label='Save', font=('System', 15))
 file_menu.add_command(label='Save as', font=('System', 15))
 
 # seg_menu.add_command(label='Segmentation',command=lambda: show_frame(seg_page))
-# app_menu.add_command(label='Quit!', command=window.quit, background='red')
+# app_menu.add_command(label='Quit!', command=window.quit, background='blue')
 # app_menu.add_command(label='Home', command=lambda: show_frame(homepage), background='green', font=('System', 15))
 
-ana_menu.add_command(label='Cross-Correlation', font=('System', 15))
+ana_menu.add_command(label='Cross-Correlation', font=('System', 15), command=lambda: show_frame(cross_corr_page))
 ana_menu.add_command(label='Other Analysis', font=('System', 15))
 ana_menu.add_command(label='Analysis III', font=('System', 15))
 
@@ -251,7 +252,7 @@ button4 = tk.Button(train_page, width=10, text="Check",
                     command=lambda: print(
                         trainModelName.get() + '\n' + str(numEpochs.get()) + '\n' + gtp.get() + '\n' + tol.get()),
                     font=('System', 15))
-button5 = tk.Button(train_page, width=10, text="RUN", background="red", foreground="white",
+button5 = tk.Button(train_page, width=10, text="RUN", background="blue", foreground="white",
                     command=lambda: callTrain(trainModelName.get(), numEpochs.get(), gtp.get(), tol.get()),
                     font=('System', 15))
 ## dropdown
@@ -326,13 +327,13 @@ entryPr1.insert(1,'1')
 label3 = tk.Label(predict_page, text='End Time', font=('System', 15))
 entryPr2 = tk.Entry(predict_page, textvariable=endT, font=('System', 15))
 entryPr2.insert(1,'41')
-buttonPr4 = tk.Button(predict_page, text="Select trained model",font=('System',15))
+buttonPr4 = tk.Button(predict_page, text="Select Trained Model",font=('System',15))
 entryPr5 = tk.Entry(predict_page,textvariable=modelPath, font=('System',15))
 buttonPr5 = tk.Button(predict_page,width=10, text="Check",
                       command=lambda: print(predictModelName.get(), imageName, predictOutputPath, startT.get(),
                                             endT.get()),
                       font=('System', 15))
-buttonPr6 = tk.Button(predict_page, width=10, text="RUN", background="red", foreground="white",
+buttonPr6 = tk.Button(predict_page, width=10, text="RUN", background="blue", foreground="white",
                       command=lambda: callPredict(predictModelName.get(), startT.get(), endT.get()),
                       font=('System', 15))
 
@@ -342,9 +343,9 @@ label1.place(x=50, y=200); modelMenu.place(x=400, y=200)
 label2.place(x=50, y=250); entryPr1.place(x=400, y=250)
 label3.place(x=50, y=300); entryPr2.place(x=400, y=300)
 buttonPr2.place(x=50, y=350); entryPr3.place(x=400, y=350)
-buttonPr3.place(x=50, y=400); entryPr4.place(x=400, y=400)
+buttonPr4.place(x=50, y=400); entryPr5.place(x=400, y=400)
 
-buttonPr4.place(x=50,y=450); entryPr5.place(x=400, y=450)
+buttonPr3.place(x=50,y=450); entryPr4.place(x=400, y=450)
 
 buttonPr5.place(x=50, y=600)
 buttonPr6.place(x=50, y=650)
@@ -395,12 +396,12 @@ track_page_greet.place(x=50, y=120)
 buttonTr1 = tk.Button(track_page, text="Back", command=lambda: show_frame(homepage), font=('System', 15))
 
 buttonTr2 = tk.Button(track_page, text="Select Original Images", command=lambda: browseImageTr(), font=('System', 15))
-buttonTr3 = tk.Button(track_page, text="Select Folder with Segmented Images", command=lambda: segOPfolder(),
+buttonTr3 = tk.Button(track_page, text="Select Folder with Segmentation Results", command=lambda: segOPfolder(),
                       font=('System', 15))
 buttonTr4 = tk.Button(track_page, text="Select Folder for Tracking Output", command=lambda: trackOPfolder(),
                       font=('System', 15))
 buttonTr5 = tk.Button(track_page, width=10, text="Check", font=('System', 15), command=lambda: print("Check check check"))
-buttonTr6 = tk.Button(track_page, width=10, text="RUN", font=('System', 15), background="red", foreground="white", command=lambda: runTracking(imageName=imgname.get(),
+buttonTr6 = tk.Button(track_page, width=10, text="RUN", font=('System', 15), background="blue", foreground="white", command=lambda: runTracking(imageName=imgname.get(),
                                                                           segmentationOPFolder=segloc.get(),
                                                                           trackingOPFolder=trackloc.get(),
                                                                           startTime=strT.get(),
@@ -473,10 +474,12 @@ CreateToolTip(track_page_greet, text='This page is used for tracking the objects
 test_page_greet = tk.Label(test_page, text='Test', font=('Courier', 40, 'bold'))
 test_page_greet.place(x=50, y=120)
 ########################################################################################################################
+# Family Tree
 
 excelFile = tk.StringVar()
 ftOpFolder = tk.StringVar()
 branchMinLen = tk.StringVar()
+objId = tk.StringVar()
 
 def selectExcelFile():
     excelFile.set(fd.askopenfilename(defaultextension='.xlsx', filetypes=[("Excel Files", "*.xlsx")]))
@@ -484,6 +487,9 @@ def selectFtOutputFolder():
     ftOpFolder.set(fd.askdirectory())
 def generateFamilyTrees():
     print("Processing Family Trees...")
+
+def generateFamilyTree():
+    print('Generating Family Tree for your object...')
 
 
 fam_page_greet = tk.Label(fam_page, text='Family Tree and LPR', font=('Courier', 40,'bold'))
@@ -499,8 +505,10 @@ buttonFt4 = tk.Button(fam_page, text='Branch Length Threshold', font=('System',1
 entryFt4 = tk.Entry(fam_page, textvariable=branchMinLen, font=('System',15))
 entryFt4.insert(1,'5')
 
-buttonFt6 = tk.Button(fam_page, width=10, text="Check", font=('System',15), command=lambda: print("Check check check"))
-buttonFt7 = tk.Button(fam_page, width=10, text="RUN", command=lambda: generateFamilyTrees(),font=('System',15),background="red", foreground="white")
+buttonFt6 = tk.Button(fam_page, text="Generate Family Tree", font=('System',15), command=lambda: generateFamilyTree(),background='cyan',foreground='white')
+buttonFt7 = tk.Button(fam_page, text="Generate All Family Trees", command=lambda: generateFamilyTrees(),font=('System',15),background="blue", foreground="white")
+buttonFt8 = tk.Button(fam_page, text='Enter Object ID', font=('System',15))
+entryFt5 = tk.Entry(fam_page,textvariable=objId, font=('System',15))
 
 buttonFt1.place(x=50, y=50)
 buttonFt2.place(x=50, y=200)
@@ -509,14 +517,59 @@ buttonFt3.place(x=50, y=250)
 entryFt3.place(x=500, y=250, width=400)
 buttonFt4.place(x=50, y=300)
 entryFt4.place(x=500, y=300, width=100)
-buttonFt6.place(x=50, y=400)
-buttonFt7.place(x=50,y=450)
+buttonFt6.place(x=50, y=450)
+buttonFt7.place(x=50, y=500)
+buttonFt8.place(x=50, y=350)
+entryFt5.place(x=500, y=350)
 
 CreateToolTip(buttonFt2, text='Select the excel file that contains the tracking data.\n'
                               'You can find it in the folder you selected to save the tracking results.!')
 CreateToolTip(buttonFt3, text='Click here to select a folder to store your family trees. \nPlease select an empty folder!')
 CreateToolTip(buttonFt4, text='Select the minimum time frames an object has to exist \nto be considered for the family tree.')
-CreateToolTip(buttonFt7, text='Click RUN to draw the family trees!')
+CreateToolTip(buttonFt7, text='Click here to draw all the family trees!')
+########################################################################################################################
+
+
+# Analysis
+# corss corr
+ftOpFolderCC = tk.StringVar()
+segOPfolderCC = tk.StringVar()
+excelFileCC = tk.StringVar()
+
+def selectSegmentationFolderCC():
+    None
+def selectExcelFileCC():
+    None
+
+def selectFTFolderCC():
+    None
+
+cross_corr_greet = tk.Label(cross_corr_page, text='Cross-Correlation Analysis', font=('Courier', 40,'bold'))
+cross_corr_greet.place(x=50, y=120)
+
+buttonCC1 = tk.Button(cross_corr_page, text="Back", command=lambda: show_frame(homepage), font=('System',  15))
+
+buttonCC2 = tk.Button(cross_corr_page, text="Select Segmentation Results Folder", command=lambda: selectSegmentationFolderCC(), font=('System',  15))
+entryCC2 = tk.Entry(cross_corr_page, textvariable=segOPfolderCC, font=('System',15))
+buttonCC3 = tk.Button(cross_corr_page, text="Select Tracking Results", command=lambda: selectExcelFileCC(),font=('System',  15))
+entryCC3 = tk.Entry(cross_corr_page, textvariable=excelFileCC, font=('System',15))
+buttonCC4 = tk.Button(cross_corr_page, text='Select Family Tree Folder', font=('System',15),command=lambda : selectFTFolderCC())
+entryCC4 = tk.Entry(cross_corr_page, textvariable=ftOpFolderCC, font=('System',15))
+optionCC = tk.Label(cross_corr_page, borderwidth=1, relief='solid', text='Select Options to Run',font=('System',15))
+c1 = tk.Checkbutton(cross_corr_page,text='Cross Correlation Calculation',onvalue=1,font=('System',15))
+c2 = tk.Checkbutton(cross_corr_page,text='Statistical Analysis',onvalue=1,font=('System',15))
+
+buttonCC6 = tk.Button(cross_corr_page, width=10, text='RUN',font=('System',15),background='blue',foreground='white')
+
+
+buttonCC1.place(x=50,y=50)
+buttonCC2.place(x=50,y=200); entryCC2.place(x=500,y=200)
+buttonCC3.place(x=50,y=250); entryCC3.place(x=500,y=250)
+buttonCC4.place(x=50,y=300); entryCC4.place(x=500,y=300)
+optionCC.place(x=50,y=350)
+c1.place(x=70,y=400)
+c2.place(x=70,y=450)
+buttonCC6.place(x=50,y=550)
 ########################################################################################################################
 
 help_page_greet = tk.Label(help_page, text='Help', font=('Courier', 40, 'bold'))
