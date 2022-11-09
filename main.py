@@ -232,11 +232,11 @@ entry1 = tk.Entry(train_page, textvariable=numEpochs, font=('System', 15), width
 entry1.insert(0,'10')
 button1 = tk.Button(train_page, text="Back", command=lambda: show_frame(seg_page), font=('System', 15))
 
-button2 = tk.Button(train_page, width=20, text="Select Training Data Folder", font=('System', 15),
+button2 = tk.Button(train_page, text="Select Folder with Training Data", font=('System', 15),
                     command=lambda: browseGT())
 entry2 = ttk.Entry(train_page, textvariable=gtp, width=25, font=('System', 15))
 
-button3 = tk.Button(train_page, text="Select Output Folder", command=lambda: trainOutputLocation(),
+button3 = tk.Button(train_page, text="Select Folder to Save Training Output", command=lambda: trainOutputLocation(),
                     font=('System', 15))
 entry3 = ttk.Entry(train_page, textvariable=tol, width=25, font=('System', 15))
 #
@@ -263,14 +263,14 @@ modelMenu.place(x=400, y=200)
 ##
 button1.place(x=50, y=50)
 label2.place(x=50, y=250)
-entry1.place(x=400, y=250)
+entry1.place(x=500, y=250)
 button2.place(x=50, y=300)
 button3.place(x=50, y=350)
 button4.place(x=50, y=450)
 button5.place(x=50, y=500)
 
-entry2.place(x=400, y=300)
-entry3.place(x=400, y=350)
+entry2.place(x=500, y=300)
+entry3.place(x=500, y=350)
 
 CreateToolTip(train_page_greet,text='You can use your own data with ground truth to train a segmentation model.\n'
                                     'If you want to use an already-trained model, please go back and select Predict option.')
@@ -314,9 +314,9 @@ modelMenu.config(font=('System', 15))
 
 buttonPr1 = tk.Button(predict_page, text="Back", command=lambda: show_frame(seg_page), font=('System', 15))
 
-buttonPr2 = tk.Button(predict_page, text="Select Image", command=lambda: browseImage(), font=('System', 15))
+buttonPr2 = tk.Button(predict_page, text="Select Image to Segment", command=lambda: browseImage(), font=('System', 15))
 entryPr3 = tk.Entry(predict_page, textvariable=imageName, font=('System', 15))
-buttonPr3 = tk.Button(predict_page, text="Select Output Folder", command=lambda: predictOutputLocation(),
+buttonPr3 = tk.Button(predict_page, text="Select Folder to Save Segmentation Output", command=lambda: predictOutputLocation(),
                       font=('System', 15))
 entryPr4 = tk.Entry(predict_page, textvariable=predictOutputPath, font=('System', 15))
 startT = tk.IntVar()
@@ -339,13 +339,13 @@ buttonPr6 = tk.Button(predict_page, width=10, text="RUN", background="blue", for
 
 buttonPr1.place(x=50, y=50)
 
-label1.place(x=50, y=200); modelMenu.place(x=400, y=200)
-label2.place(x=50, y=250); entryPr1.place(x=400, y=250)
-label3.place(x=50, y=300); entryPr2.place(x=400, y=300)
-buttonPr2.place(x=50, y=350); entryPr3.place(x=400, y=350)
-buttonPr4.place(x=50, y=400); entryPr5.place(x=400, y=400)
+label1.place(x=50, y=200); modelMenu.place(x=500, y=200)
+label2.place(x=50, y=250); entryPr1.place(x=520, y=250)
+label3.place(x=50, y=300); entryPr2.place(x=520, y=300)
+buttonPr2.place(x=50, y=350); entryPr3.place(x=520, y=350)
+buttonPr4.place(x=50, y=400); entryPr5.place(x=520, y=400)
 
-buttonPr3.place(x=50,y=450); entryPr4.place(x=400, y=450)
+buttonPr3.place(x=50,y=450); entryPr4.place(x=520, y=450)
 
 buttonPr5.place(x=50, y=600)
 buttonPr6.place(x=50, y=650)
@@ -398,7 +398,7 @@ buttonTr1 = tk.Button(track_page, text="Back", command=lambda: show_frame(homepa
 buttonTr2 = tk.Button(track_page, text="Select Original Images", command=lambda: browseImageTr(), font=('System', 15))
 buttonTr3 = tk.Button(track_page, text="Select Folder with Segmentation Results", command=lambda: segOPfolder(),
                       font=('System', 15))
-buttonTr4 = tk.Button(track_page, text="Select Folder for Tracking Output", command=lambda: trackOPfolder(),
+buttonTr4 = tk.Button(track_page, text="Select Folder to Save Tracking Results", command=lambda: trackOPfolder(),
                       font=('System', 15))
 buttonTr5 = tk.Button(track_page, width=10, text="Check", font=('System', 15), command=lambda: print("Check check check"))
 buttonTr6 = tk.Button(track_page, width=10, text="RUN", font=('System', 15), background="blue", foreground="white", command=lambda: runTracking(imageName=imgname.get(),
@@ -505,8 +505,8 @@ buttonFt4 = tk.Button(fam_page, text='Branch Length Threshold', font=('System',1
 entryFt4 = tk.Entry(fam_page, textvariable=branchMinLen, font=('System',15))
 entryFt4.insert(1,'5')
 
-buttonFt6 = tk.Button(fam_page, text="Generate Family Tree", font=('System',15), command=lambda: generateFamilyTree(),background='cyan',foreground='white')
-buttonFt7 = tk.Button(fam_page, text="Generate All Family Trees", command=lambda: generateFamilyTrees(),font=('System',15),background="blue", foreground="white")
+buttonFt6 = tk.Button(fam_page, text="Generate Family Tree", font=('System',15), command=lambda: generateFamilyTree(),background='blue',foreground='white')
+buttonFt7 = tk.Button(fam_page, text="Generate All Family Trees", command=lambda: generateFamilyTrees(),font=('System',15),background="navy", foreground="white")
 buttonFt8 = tk.Button(fam_page, text='Enter Object ID', font=('System',15))
 entryFt5 = tk.Entry(fam_page,textvariable=objId, font=('System',15))
 
