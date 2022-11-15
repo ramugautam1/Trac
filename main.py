@@ -4,6 +4,7 @@ import tkinter.filedialog as fd
 from runTracking import runTracking
 import tkinter.font as font
 from tkinter import ttk
+from segment import segmentation, segmentation_predict
 
 Font_tuple = ("Courier",45,"bold")
 
@@ -176,30 +177,38 @@ epochs = 0
 imageName = tk.StringVar()
 trainModelName = tk.StringVar()
 predictModelName = tk.StringVar()
-gtp = tk.StringVar()
-tol = tk.StringVar()
+gt_path = tk.StringVar()
+val_path = tk.StringVar()
+train_output_location = tk.StringVar()
 
 
 def browseGT():
     try:
-        gtp.set(fd.askdirectory())
+        gt_path.set(fd.askdirectory())
 
     except:
         print('star!')
-        gtp.set('/default/gt/path/')
+        gt_path.set('/default/gt/path/')
+
+def browse_validation_data():
+    try:
+        val_path.set(fd.askdirectory())
+    except:
+        print('Not a Valid Path.')
+
 
 
 def browseImage():
     imageName.set(fd.askopenfilename(defaultextension=".nii", filetypes=[("NIFTI Files", "*.nii")]))
-    # gtp.set(imageName)
+    # gt_path.set(imageName)
 
 
 def trainOutputLocation():
     try:
-        tol.set(fd.askdirectory())
+        train_output_location.set(fd.askdirectory())
 
     except:
-        tol.set('/default/train/output/path/')
+        train_output_location.set('/default/train/output/path/')
 
 
 def predictOutputLocation():
@@ -209,9 +218,9 @@ def predictOutputLocation():
         predictOutputPath.set('/default/predict/output/path/')
 
 
-def callTrain(modl, epochs, grtp, opp):
-    trainModelName.set(modl)
-    # segment_train(model=modl, epochs=epochs, gt_path=grtp, output_path=opp)
+def callTrain(modl, epochs, gt_p, val_p, op_p):
+    print(modl,epochs,gt_p,val_p,op_p)
+    segmentation.train(modl,epochs,gt_p,val_p,op_p)
 
 
 def setPredictModelName(choice):
@@ -234,11 +243,11 @@ button1 = tk.Button(train_page, text="Back", command=lambda: show_frame(seg_page
 
 button2 = tk.Button(train_page, text="Select Folder with Training Data", font=('System', 15),
                     command=lambda: browseGT())
-entry2 = ttk.Entry(train_page, textvariable=gtp, width=25, font=('System', 15))
+entry2 = ttk.Entry(train_page, textvariable=gt_path, width=25, font=('System', 15))
 
 button3 = tk.Button(train_page, text="Select Folder to Save Training Output", command=lambda: trainOutputLocation(),
                     font=('System', 15))
-entry3 = ttk.Entry(train_page, textvariable=tol, width=25, font=('System', 15))
+entry3 = ttk.Entry(train_page, textvariable=train_output_location, width=25, font=('System', 15))
 #
 modelNameList = ['FC-DenseNet', 'MobileUNet3D-Skip', 'ResNet-101', 'Encoder_Decoder3D', 'Encoder_Decoder3D_contrib',
                  'DeepLabV33D', 'FRRN-A', 'FRRN-B', 'FCN8', 'GCN-Res50', 'GCN-Res101', 'GCN-Res152', 'AdapNet3D',
@@ -247,13 +256,17 @@ modelNameList = ['FC-DenseNet', 'MobileUNet3D-Skip', 'ResNet-101', 'Encoder_Deco
 trainModelName.set(modelNameList[0])
 modelMenu = tk.OptionMenu(train_page, trainModelName, *modelNameList, command=setTrainModelName)
 modelMenu.config(font=('System', 15))
+
+buttonVal = tk.Button(train_page,text = "Select Folder with Validation Data", font=('System',15), command=lambda : browse_validation_data())
+entryVal = tk.Entry(train_page, textvariable=val_path, width=25, font=('System',15))
+
 #
 button4 = tk.Button(train_page, width=10, text="Check",
                     command=lambda: print(
-                        trainModelName.get() + '\n' + str(numEpochs.get()) + '\n' + gtp.get() + '\n' + tol.get()),
+                        trainModelName.get() + '\n' + str(numEpochs.get()) + '\n' + gt_path.get() + '\n' + train_output_location.get()),
                     font=('System', 15))
 button5 = tk.Button(train_page, width=10, text="RUN", background="blue", foreground="white",
-                    command=lambda: callTrain(trainModelName.get(), numEpochs.get(), gtp.get(), tol.get()),
+                    command=lambda: callTrain(trainModelName.get(), numEpochs.get(), gt_path.get(),  val_path.get(), train_output_location.get()),
                     font=('System', 15))
 ## dropdown
 label1 = tk.Label(train_page, text='Model', font=('System', 15))
@@ -265,12 +278,15 @@ button1.place(x=50, y=50)
 label2.place(x=50, y=250)
 entry1.place(x=500, y=250)
 button2.place(x=50, y=300)
-button3.place(x=50, y=350)
-button4.place(x=50, y=450)
-button5.place(x=50, y=500)
+button3.place(x=50, y=400)
+buttonVal.place(x=50, y=350)
+entryVal.place(x=500, y=350)
+
+button4.place(x=50, y=500)
+button5.place(x=50, y=550)
 
 entry2.place(x=500, y=300)
-entry3.place(x=500, y=350)
+entry3.place(x=500, y=400)
 
 CreateToolTip(train_page_greet,text='You can use your own data with ground truth to train a segmentation model.\n'
                                     'If you want to use an already-trained model, please go back and select Predict option.')
@@ -287,12 +303,10 @@ CreateToolTip(button5, text='Start training the selected model with your trainin
 ###################################################
 predModelName = tk.StringVar()
 modelPath = tk.StringVar()
+predict_output_path = tk.StringVar()
+def callPredict(model, imageName, startTime, endTime):
 
-def callPredict(model, st, et):
-    predModelName.set(model)
-    startTime = st
-    endTime = et
-    # segment_predict(predModelName, imageName, predict_output_path, startTime, endTime)
+    segmentation_predict.predict(model, imageName, startTime, endTime, predict_output_path)
 
 
 predict_page_greet = tk.Label(predict_page, text='Segment', font=('Courier', 40, 'bold'))
@@ -319,22 +333,21 @@ entryPr3 = tk.Entry(predict_page, textvariable=imageName, font=('System', 15))
 buttonPr3 = tk.Button(predict_page, text="Select Folder to Save Segmentation Output", command=lambda: predictOutputLocation(),
                       font=('System', 15))
 entryPr4 = tk.Entry(predict_page, textvariable=predictOutputPath, font=('System', 15))
-startT = tk.IntVar()
-endT = tk.IntVar()
+startT = tk.StringVar()
+endT = tk.StringVar()
 label2 = tk.Label(predict_page, text="Start Time", font=('System', 15))
 entryPr1 = tk.Entry(predict_page, textvariable=startT, font=('System', 15))
-entryPr1.insert(1,'1')
+entryPr1.insert(0,'1')
 label3 = tk.Label(predict_page, text='End Time', font=('System', 15))
 entryPr2 = tk.Entry(predict_page, textvariable=endT, font=('System', 15))
-entryPr2.insert(1,'41')
+entryPr2.insert(0,'41')
 buttonPr4 = tk.Button(predict_page, text="Select Trained Model",font=('System',15))
 entryPr5 = tk.Entry(predict_page,textvariable=modelPath, font=('System',15))
 buttonPr5 = tk.Button(predict_page,width=10, text="Check",
-                      command=lambda: print(predictModelName.get(), imageName, predictOutputPath, startT.get(),
-                                            endT.get()),
-                      font=('System', 15))
+                      command=lambda: print(predictModelName.get(), imageName.get(), startT.get(),
+                                            endT.get(), predictOutputPath.get()), font=('System', 15))
 buttonPr6 = tk.Button(predict_page, width=10, text="RUN", background="blue", foreground="white",
-                      command=lambda: callPredict(predictModelName.get(), startT.get(), endT.get()),
+                      command=lambda: callPredict(predictModelName.get(), imageName.get(), startT.get(), endT.get(),  predictOutputPath.get()),
                       font=('System', 15))
 
 buttonPr1.place(x=50, y=50)

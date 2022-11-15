@@ -1,11 +1,11 @@
 from __future__ import print_function
 
-from load_data_nii import loadDataGeneral as loadDataGeneral_nii
-from load_data_nii import loadDataGeneral_test as loadDataGeneral_test_nii
-from load_data import loadDataGeneral
-from build_model import build_mymodel
-import utils
-import FCN
+from segment.load_data_nii import loadDataGeneral as loadDataGeneral_nii
+from segment.load_data_nii import loadDataGeneral_test as loadDataGeneral_test_nii
+from segment.load_data import loadDataGeneral
+from segment.build_model import build_mymodel
+import segment.utils as utils
+import segment.FCN as FCN
 # import FCN2, models.MobileUNet3D, models.resnet_v23D, models.Encoder_Decoder3D, models.Encoder_Decoder3D_contrib, models.DeepLabp3D, models.DeepLabV33D
 # import models.FRRN3D, models.FCN3D, models.GCN3D, models.AdapNet3D, models.ICNet3D, models.PSPNet3D, models.RefineNet3D, models.BiSeNet3D, models.DDSC3D
 # import models.DenseASPP3D, models.DeepLabV3_plus3D
@@ -33,7 +33,7 @@ import argparse
 import random
 import os, sys
 import subprocess
-import helpers
+import segment.helpers as helpers
 import pandas as pd
 
 
@@ -99,114 +99,118 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--class_balancing', type=str2bool, default=True, help='Whether to use median frequency class weights to balance the classes in the loss')
-parser.add_argument('--continue_training', type=str2bool, default=True, help='Whether to continue training from a checkpoint')
-parser.add_argument('--checkpoint_step', type=int, default=1, help='How often to save checkpoints (epochs)')
-parser.add_argument('--validation_step', type=int, default=1, help='How often to perform validation (epochs)')
-parser.add_argument('--batch_size', type=int, default=8, help='Number of images in each batch')
-parser.add_argument('--dataset', type=str, default="Data_Ecad2020", help='Train Dataset you are using.')
-parser.add_argument('--valdataset', type=str, default="Val_Ecad2020", help='Val Dataset you are using.')
-parser.add_argument('--testdataset', type=str, default="Test_Aju/1210", help='test Dataset you are using.')
-parser.add_argument('--pdataset', type=str, default="EcadMyo_08", help='Prediction Dataset you are using.')
-parser.add_argument('--class_weight_reference', type=str, default="reference/Ecad2020", help='reference you are using.')
-parser.add_argument('--num_epochs', type=int, default=100, help='Number of epochs to train for')
-parser.add_argument('--num_val_images', type=int, default=200, help='Number of ramdom validation samples')
-parser.add_argument('--mode', type=str, default="predict", help='Select "train", "test", or "predict" mode. \
-    Note that for prediction mode you have to specify an image to run the model on.')
-parser.add_argument('--startpoint', type=int, default=1, help='The start time point of the prediction dataset')
-parser.add_argument('--endpoint', type=int, default=41, help='The end time point of the prediction dataset')
-parser.add_argument('--model', type=str, default="FC-DenseNet", help='The model you are using. Currently supports:\
-    FC-DenseNet, MobileUNet3D-Skip, ResNet-101, Encoder_Decoder3D, Encoder_Decoder3D_contrib, DeepLabV33D, FRRN-A, FRRN-B, FCN8, '
-    'GCN-Res50, GCN-Res101, GCN-Res152, AdapNet3D, ICNet-Res50, ICNet-Res101, ICNet-Res152, PSPNet-Res50, PSPNet-Res101, PSPNet-Res152'
-    'RefineNet-Res50, RefineNet-Res101, RefineNet-Res152, BiSeNet-ResNet50, BiSeNet-Res101, BiSeNet-Res152, DDSC-ResNet50, DDSC-ResNet101, DDSC-ResNet152'
-    'DenseASPP-ResNet50, DenseASPP-ResNet101, DenseASPP-ResNet152, DeepLabV3_plus-Res50, DeepLabV3_plus-Res101, DeepLabV3_plus-Res152')
-"""
-Currently, FC-DenseNet is the best model.
-PSPNet must take input size 192 for 3D
-"""
-"""
-Try to accommodate the input size.
-Input size for Ecad2017: 128x128x13
-Input size for Ecad2020: 32x32x15
-Input size for Aju2020: 32x32x15
+def train(model,epochs,gt_path,val_path,op_path):
+    dataset_path = gt_path
+    dataset = os.path.basename(dataset_path)
+    valdataset_path = val_path
+    valdataset = os.path.basename(valdataset_path)
+    num_epochs = epochs
+    model = model
+    mode = 'train'
+    op_path = op_path
 
-Output size for Ecad2017: 32x35x13
-Output size for Ecad2020: 35x32x15
-Output size for Aju2020: 35x32x15
-"""
-args = parser.parse_args()
+    ckpt_path = os.getcwd() + "/checkpoints/" + model + '/' + dataset
 
-img_size = 32
-class_names_list, label_values = helpers.get_label_info(os.path.join(args.dataset, "class_dict.csv"))
-class_names_string = ""
-for class_name in class_names_list:
-    if not class_name == class_names_list[-1]:
-        class_names_string = class_names_string + class_name + ", "
-    else:
-        class_names_string = class_names_string + class_name
-
-num_classes = len(label_values)
-
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-sess=tf.Session(config=config)
-
-net_input = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 15, 1])
-net_output = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 15, num_classes])
-
-network = None
-init_fn = None
-print(args.model)
-if args.model == "mymodel":
-    network = build_mymodel(net_input)
-elif args.model == "FC-DenseNet":
-    network = FCN.build_fc_densenet(net_input)
-'''
-# elif args.model == "MobileUNet3D-Skip":
-#     network = models.MobileUNet3D.build_mobile_unet3D(net_input, 'MobileUNet3D-Skip', 2)
-# elif args.model == "FC-DenseNet103":
-#     network = FCN2.build_fc_densenet(net_input,num_classes=num_classes)
-# elif args.model == "ResNet-101":
-#     network = models.resnet_v23D.resnet_v2_101(net_input, num_classes=num_classes)
-# elif args.model == "Encoder_Decoder3D":
-#     network = models.Encoder_Decoder3D.build_encoder_decoder(net_input, num_classes=num_classes)
-#     # RefineNet requires pre-trained ResNet weights
-# elif args.model == "Encoder_Decoder3D_contrib":
-#     network = models.Encoder_Decoder3D_contrib.build_encoder_decoder(net_input, num_classes=num_classes)
-# elif args.model == "DeepLabV3p3D":
-#     network = models.DeepLabp3D.Deeplabv3(net_input, num_classes)
-# elif args.model == "DeepLabV33D-Res50" or args.model == "DeepLabV33D-Res101" or args.model == "DeepLabV33D-Res152":
-#     network = models.DeepLabV33D.build_deeplabv3(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "DeepLabV3_plus-Res50" or args.model == "DeepLabV3_plus-Res101" or args.model == "DeepLabV3_plus-Res152":
-#     network = models.DeepLabV3_plus3D. build_deeplabv3_plus(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "FRRN-A" or args.model == "FRRN-B":
-#     network = models.FRRN3D.build_frrn(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "FCN8":
-#     network = models.FCN3D.build_fcn8(net_input, num_classes=num_classes)
-#     # RefineNet requires pre-trained ResNet weights
-# elif args.model == "GCN-Res50" or args.model == "GCN-Res101" or args.model == "GCN-Res152":
-#     network = models.GCN3D.build_gcn(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "AdapNet3D":
-#     network = models.AdapNet3D.build_adaptnet(net_input, num_classes=num_classes)
-# elif args.model == "ICNet-Res50" or args.model == "ICNet-Res101" or args.model == "ICNet-Res152":
-#     network = models.ICNet3D.build_icnet(net_input, [img_size, img_size, 13], num_classes=num_classes, preset_model=args.model)
-# elif args.model == "PSPNet-Res50" or args.model == "PSPNet-Res101" or args.model == "PSPNet-Res152":
-#     network = models.PSPNet3D.build_pspnet(net_input, [img_size, img_size, 13], num_classes=num_classes, preset_model=args.model)
-# elif args.model == "RefineNet-Res50" or args.model == "RefineNet-Res101" or args.model == "RefineNet-Res152":
-#     network = models.RefineNet3D.build_refinenet(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "BiSeNet-ResNet50" or args.model == "BiSeNet-Res101" or args.model == "BiSeNet-Res152":
-#     network = models.BiSeNet3D.build_bisenet(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "DDSC-ResNet50" or args.model == "DDSC-Res101" or args.model == "DDSC-Res152":
-#     network = models.DDSC3D.build_ddsc(net_input, num_classes=num_classes, preset_model=args.model)
-# elif args.model == "DenseASPP-ResNet50" or args.model == "DenseASPP-Res101" or args.model == "DenseASPP-Res152":
-#     network = models.DenseASPP3D.build_dense_aspp(net_input, num_classes=num_classes, preset_model=args.model)
-'''
+    if not os.path.isdir(ckpt_path):
+        os.makedirs(ckpt_path)
+    
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--class_balancing', type=str2bool, default=True, help='Whether to use median frequency class weights to balance the classes in the loss')
+    parser.add_argument('--continue_training', type=str2bool, default=False, help='Whether to continue training from a checkpoint')
+    parser.add_argument('--checkpoint_step', type=int, default=1, help='How often to save checkpoints (epochs)')
+    parser.add_argument('--validation_step', type=int, default=1, help='How often to perform validation (epochs)')
+    parser.add_argument('--batch_size', type=int, default=8, help='Number of images in each batch')
+    parser.add_argument('--class_weight_reference', type=str, default="reference/Ecad2020", help='reference you are using.')
+    parser.add_argument('--num_val_images', type=int, default=200, help='Number of ramdom validation samples')
+    
+    
+    """
+    Currently, FC-DenseNet is the best model.
+    PSPNet must take input size 192 for 3D
+    """
+    """
+    Try to accommodate the input size.
+    Input size for Ecad2017: 128x128x13
+    Input size for Ecad2020: 32x32x15
+    Input size for Aju2020: 32x32x15
+    
+    Output size for Ecad2017: 32x35x13
+    Output size for Ecad2020: 35x32x15
+    Output size for Aju2020: 35x32x15
+    """
+    args = parser.parse_args()
+    
+    img_size = 32
+    class_names_list, label_values = helpers.get_label_info(os.path.join(dataset_path, "class_dict.csv"))
+    class_names_string = ""
+    for class_name in class_names_list:
+        if not class_name == class_names_list[-1]:
+            class_names_string = class_names_string + class_name + ", "
+        else:
+            class_names_string = class_names_string + class_name
+    
+    num_classes = len(label_values)
+    
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess=tf.Session(config=config)
+    
+    net_input = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 15, 1])
+    net_output = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 15, num_classes])
+    
+    network = None
+    init_fn = None
+    print(model)
+    if model == "mymodel":
+        network = build_mymodel(net_input)
+    elif model == "FC-DenseNet":
+        network = FCN.build_fc_densenet(net_input)
+    '''
+    # elif model == "MobileUNet3D-Skip":
+    #     network = models.MobileUNet3D.build_mobile_unet3D(net_input, 'MobileUNet3D-Skip', 2)
+    # elif model == "FC-DenseNet103":
+    #     network = FCN2.build_fc_densenet(net_input,num_classes=num_classes)
+    # elif model == "ResNet-101":
+    #     network = models.resnet_v23D.resnet_v2_101(net_input, num_classes=num_classes)
+    # elif model == "Encoder_Decoder3D":
+    #     network = models.Encoder_Decoder3D.build_encoder_decoder(net_input, num_classes=num_classes)
+    #     # RefineNet requires pre-trained ResNet weights
+    # elif model == "Encoder_Decoder3D_contrib":
+    #     network = models.Encoder_Decoder3D_contrib.build_encoder_decoder(net_input, num_classes=num_classes)
+    # elif model == "DeepLabV3p3D":
+    #     network = models.DeepLabp3D.Deeplabv3(net_input, num_classes)
+    # elif model == "DeepLabV33D-Res50" or model == "DeepLabV33D-Res101" or model == "DeepLabV33D-Res152":
+    #     network = models.DeepLabV33D.build_deeplabv3(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "DeepLabV3_plus-Res50" or model == "DeepLabV3_plus-Res101" or model == "DeepLabV3_plus-Res152":
+    #     network = models.DeepLabV3_plus3D. build_deeplabv3_plus(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "FRRN-A" or model == "FRRN-B":
+    #     network = models.FRRN3D.build_frrn(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "FCN8":
+    #     network = models.FCN3D.build_fcn8(net_input, num_classes=num_classes)
+    #     # RefineNet requires pre-trained ResNet weights
+    # elif model == "GCN-Res50" or model == "GCN-Res101" or model == "GCN-Res152":
+    #     network = models.GCN3D.build_gcn(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "AdapNet3D":
+    #     network = models.AdapNet3D.build_adaptnet(net_input, num_classes=num_classes)
+    # elif model == "ICNet-Res50" or model == "ICNet-Res101" or model == "ICNet-Res152":
+    #     network = models.ICNet3D.build_icnet(net_input, [img_size, img_size, 13], num_classes=num_classes, preset_model=model)
+    # elif model == "PSPNet-Res50" or model == "PSPNet-Res101" or model == "PSPNet-Res152":
+    #     network = models.PSPNet3D.build_pspnet(net_input, [img_size, img_size, 13], num_classes=num_classes, preset_model=model)
+    # elif model == "RefineNet-Res50" or model == "RefineNet-Res101" or model == "RefineNet-Res152":
+    #     network = models.RefineNet3D.build_refinenet(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "BiSeNet-ResNet50" or model == "BiSeNet-Res101" or model == "BiSeNet-Res152":
+    #     network = models.BiSeNet3D.build_bisenet(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "DDSC-ResNet50" or model == "DDSC-Res101" or model == "DDSC-Res152":
+    #     network = models.DDSC3D.build_ddsc(net_input, num_classes=num_classes, preset_model=model)
+    # elif model == "DenseASPP-ResNet50" or model == "DenseASPP-Res101" or model == "DenseASPP-Res152":
+    #     network = models.DenseASPP3D.build_dense_aspp(net_input, num_classes=num_classes, preset_model=model)
+    '''
 #---------------------------------------------------------------------------------------------------------------------------------------------
-if args.mode == "train":
+
     losses = None
     if args.class_balancing:
-        print("Computing class weights for", args.dataset, "...")
+        print("Computing class weights for", dataset, "...")
         class_weights = utils.compute_class_weights(labels_dir=args.class_weight_reference,
                                                     label_values=label_values)
         print(class_weights)
@@ -226,25 +230,30 @@ if args.mode == "train":
     loss = tf.reduce_mean(losses)
 
     opt = tf.train.AdamOptimizer(0.0002).minimize(loss, var_list=[var for var in tf.trainable_variables()])
-saver = tf.train.Saver(max_to_keep=1000)
-sess.run(tf.global_variables_initializer())
+    
+    
+    
+    
+    saver = tf.train.Saver(max_to_keep=1000)
+    sess.run(tf.global_variables_initializer())
 
-if init_fn is not None:
-    init_fn(sess)
+    if init_fn is not None:
+        init_fn(sess)
 
-model_checkpoint_name = "checkpoints/" + args.model + '/' + args.dataset + "/latest_model_" + "_" + args.dataset + ".ckpt"
-if args.continue_training or not args.mode == "train":
-    print('Loaded latest model checkpoint')
-    print(model_checkpoint_name)
-    saver.restore(sess, model_checkpoint_name)
 
-if args.mode == "train":
+    model_checkpoint_name = ckpt_path + "/latest_model_" + "_" + dataset + ".ckpt"
+
+
+    if args.continue_training or not mode == "train":
+        print('Loaded latest model checkpoint')
+        print(model_checkpoint_name)
+        saver.restore(sess, model_checkpoint_name)
 
     # Load the data
     print("Loading the data ...")
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    csv_path_training = args.dataset + '/idx-train.csv'
+    csv_path_training = dataset_path + '/idx-train.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path1 = csv_path_training[:csv_path_training.rfind('/')] + '/'
 
@@ -254,8 +263,7 @@ if args.mode == "train":
     X_train, y_train = loadDataGeneral(df, path1, img_size)
     print(X_train.shape, y_train.shape)
 
-
-    csv_path_val = args.valdataset + '/idx-val.csv'
+    csv_path_val = valdataset_path + '/idx-val.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path2 = csv_path_val[:csv_path_val.rfind('/')] + '/'
 
@@ -279,7 +287,7 @@ if args.mode == "train":
     avg_scores_per_epoch = []
 
     # Do the training here
-    for epoch in range(0, args.num_epochs):
+    for epoch in range(0, num_epochs):
         current_losses = []
 
         cnt = 0
@@ -339,8 +347,8 @@ if args.mode == "train":
         avg_loss_per_epoch.append(mean_loss)
 
         # Create directories if needed
-        if not os.path.isdir("%s/%s/%s/%04d" % ("checkpoints",args.model, args.dataset, epoch)):
-            os.makedirs("%s/%s/%s/%04d" % ("checkpoints", args.model, args.dataset,  epoch))
+        if not os.path.isdir("%s/%04d" % (ckpt_path, epoch)):
+            os.makedirs("%s/%04d" % (ckpt_path,  epoch))
 
         # Save latest checkpoint to same file name
         print("Saving latest checkpoint")
@@ -348,11 +356,11 @@ if args.mode == "train":
 
         # if epoch % args.checkpoint_step == 0:
         #     print("Saving checkpoint for this epoch")
-        #     saver.save(sess, "%s/%s/%s/%04d/model.ckpt" % ("checkpoints",args.model, args.dataset, epoch))
+        #     saver.save(sess, "%s/%s/%s/%04d/model.ckpt" % ("checkpoints",model, dataset, epoch))
 
         if epoch % args.validation_step == 0:
             print("Performing validation")
-            target = open("%s/%s/%s/%04d/val_scores.csv" % ("checkpoints",args.model, args.dataset, epoch), 'w')
+            target = open("%s/%04d/val_scores.csv" % (ckpt_path, epoch), 'w')
             target.write("val_name, avg_accuracy, precision, recall, f1 score, mean iou, %s\n" % (class_names_string))
 
             scores_list = []
@@ -396,7 +404,7 @@ if args.mode == "train":
                 #     img=1-img
                 #     fig.add_subplot(1, columns, i)
                 #     plt.imshow(img)
-                # fig.savefig("%s/%s/%04d/%s_gt.png"%("checkpoints",args.model, epoch, str(ind)))
+                # fig.savefig("%s/%s/%04d/%s_gt.png"%("checkpoints",model, epoch, str(ind)))
                 # plt.close(fig)
                 #
                 # fig = plt.figure(figsize=(16, 16))
@@ -407,7 +415,7 @@ if args.mode == "train":
                 #     img = 1 - img
                 #     fig.add_subplot(1, columns, i)
                 #     plt.imshow(img)
-                # fig.savefig("%s/%s/%04d/%s_pred.png" % ("checkpoints", args.model ,epoch, str(ind)))
+                # fig.savefig("%s/%s/%04d/%s_pred.png" % ("checkpoints", model ,epoch, str(ind)))
                 # plt.close(fig)
 
                 accuracy, class_accuracies, prec, rec, f1, iou = utils.evaluate_segmentation(pred=output_image,
@@ -445,7 +453,7 @@ if args.mode == "train":
             print("Validation IoU score = ", avg_iou)
 
         epoch_time = time.time() - epoch_st
-        remain_time = epoch_time * (args.num_epochs - 1 - epoch)
+        remain_time = epoch_time * (num_epochs - 1 - epoch)
         m, s = divmod(remain_time, 60)
         h, m = divmod(m, 60)
         if s != 0:
@@ -458,311 +466,34 @@ if args.mode == "train":
     fig = plt.figure(figsize=(11, 8))
     ax1 = fig.add_subplot(111)
 
-    ax1.plot(range(args.num_epochs), avg_scores_per_epoch)
+    ax1.plot(range(num_epochs), avg_scores_per_epoch)
     ax1.set_title("Average validation accuracy vs epochs")
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Avg. val. accuracy")
 
-    plt.savefig("%s/%s/%s/accuracy_vs_epochs.png" % ("checkpoints", args.model, args.dataset))
+    plt.savefig("%s/accuracy_vs_epochs.png" % (ckpt_path))
 
     plt.clf()
 
     ax1 = fig.add_subplot(111)
 
-    ax1.plot(range(args.num_epochs), avg_loss_per_epoch)
+    ax1.plot(range(num_epochs), avg_loss_per_epoch)
     ax1.set_title("Average loss vs epochs")
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Current loss")
 
-    plt.savefig("%s/%s/%s/loss_vs_epochs.png" % ("checkpoints", args.model, args.dataset))
+    plt.savefig("%s/loss_vs_epochs.png" % (ckpt_path))
 
     plt.clf()
 
     ax1 = fig.add_subplot(111)
 
-    ax1.plot(range(args.num_epochs), avg_iou)
+    ax1.plot(range(num_epochs), iou_list)
     ax1.set_title("Average loss vs epochs")
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Current loss")
 
-    plt.savefig("%s/%s/%s/iou_vs_epochs.png" % ("checkpoints", args.model, args.dataset))
+    plt.savefig("%s/iou_vs_epochs.png" % (ckpt_path))
 
 
 ########################################################################################################################
-#args.startpoint
-
-elif args.mode == "predict":
-    for tt in range(args.startpoint, args.endpoint+1):
-        print("\n***** Begin prediction *****")
-        print("Dataset -->", args.pdataset)
-        print("Model -->", args.model)
-        print("Num Classes -->", num_classes)
-        print("time point -->", tt)
-        print("")
-
-        # Create directories if needed
-        addrSegRes = "/home/nirvan/Desktop/my3D_1/my3D_1/EcadMyo_08/Segmentation_Result_EcadMyo_08"
-        # addrSegRes = "/home/nirvan/Desktop/my3D_1/my3D_1/EcadMyo_08/Segmentation_Result_EcadMyo_08XXXXXXXX"
-
-        if not os.path.isdir("%s/%s/%s/%s" % (addrSegRes, args.pdataset, args.model, tt)):
-            os.makedirs("%s/%s/%s/%s" % (addrSegRes, args.pdataset, args.model, tt))
-        print(os.path.isdir("%s/%s/%s/%s" % (addrSegRes, args.pdataset, args.model, tt)))
-        csv_path_val = '/home/nirvan/Desktop/my3D_1/my3D_1/' + args.pdataset + '/'+str(tt)+'/idx-pred.csv'
-        # Path to the folder with images. Images will be read from path + path_from_csv
-        path2 = csv_path_val[:csv_path_val.rfind('/')] + '/'  # + str(tt) + '/'
-
-        df = pd.read_csv(csv_path_val)
-
-        # Load test data
-        input_image_pred, gt= loadDataGeneral(df, path2,img_size)
-        print(input_image_pred[0].shape,gt[0].shape)
-
-        # Run testing on ALL test images
-        for ind in range(len(input_image_pred)):
-            input_image = np.expand_dims(
-                np.float32(input_image_pred[ind]), axis=0) #/ 255.0
-            print(input_image.shape)
-
-
-            sys.stdout.write("\rRunning predict image %d / %d" % (ind + 1, len(input_image_pred)))
-            sys.stdout.flush()
-
-            st = time.time()
-            #output_image = sess.run(network, feed_dict={net_input: input_image})
-            output_image, stack = sess.run(network, feed_dict={net_input: input_image})
-
-            #model_checkpoint_name = "checkpoints/" + args.model + "/latest_model_" + "_" + args.dataset + ".ckpt"
-            #new_saver = tf.train.import_meta_graph('/home/scw4750/Liuhongkun/tfrecord/zooscan/Alexnet/Modal/model20170226041552612/mymodel.meta')
-
-            #run_times_list.append(time.time() - st)
-
-
-            output_image = np.array(output_image[0, :, :, :])
-            input_image = np.array(input_image[0, :, :, :])
-            stack = np.array(stack[0, :, :, :, :])
-
-            # try to accommodate the size
-            w, l, h, c = 35, 32, 15, 64
-
-            #output_image_resize = np.zeros((w, l, h))
-            stack_resize = np.zeros((l, w, h, c))
-            for idx in range(stack.shape[2]):
-                #img = output_image[:, :, idx, 1]
-                #img_sm = cv2.resize(img, (w, l), interpolation=cv2.INTER_LINEAR)
-                #output_image_resize[:, :, idx] = img_sm
-                for idx2 in range(c):
-                    stk = stack[:, :, idx, idx2]
-                    stk_sm = cv2.resize(stk, (w, l), interpolation=cv2.INTER_LINEAR)
-                    stack_resize[:, :, idx, idx2] = stk_sm
-
-
-
-            new_image = nib.Nifti1Image(output_image, affine=np.eye(4))
-            input_image = nib.Nifti1Image(input_image, affine=np.eye(4))
-            final_weights_output = nib.Nifti1Image(stack_resize, affine=np.eye(4))
-            if ind<10:
-                nib.save(new_image, "%s/%s/%s/%s/Z00%s_regression.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-                nib.save(input_image, "%s/%s/%s/%s/Z00%s_input.nii" % (
-                addrSegRes, args.pdataset, args.model, tt, str(ind)))
-                nib.save(final_weights_output, "%s/%s/%s/%s/Z00%s_final_weights.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-            elif ind<100:
-                nib.save(new_image, "%s/%s/%s/%s/Z0%s_regression.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-                nib.save(input_image, "%s/%s/%s/%s/Z0%s_input.nii" % (
-                addrSegRes, args.pdataset, args.model, tt, str(ind)))
-                nib.save(final_weights_output, "%s/%s/%s/%s/Z0%s_final_weights.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-            else:
-                nib.save(new_image, "%s/%s/%s/%s/Z%s_regression.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-                nib.save(input_image, "%s/%s/%s/%s/Z%s_input.nii" % (
-                addrSegRes, args.pdataset, args.model, tt, str(ind)))
-                nib.save(final_weights_output, "%s/%s/%s/%s/Z%s_final_weights.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-
-            output_image_resize = helpers.reverse_one_hot(output_image)
-            #out_vis_image = helpers.colour_code_segmentation(output_image, label_values)
-            new_image = nib.Nifti1Image(output_image_resize, affine=np.eye(4))
-            if ind < 10:
-                nib.save(new_image, "%s/%s/%s/%s/Z00%s_class.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-            elif ind < 100:
-                nib.save(new_image, "%s/%s/%s/%s/Z0%s_class.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-            else:
-                nib.save(new_image, "%s/%s/%s/%s/Z%s_class.nii" % (addrSegRes, args.pdataset, args.model, tt, str(ind)))
-
-
-
-
-
-
-
-########################################################################################################################
-
-elif args.mode == "test":
-
-    print("\n***** Begin test *****")
-
-    print("Dataset -->", args.testdataset)
-
-    print("Model -->", args.model)
-
-    print("Num Classes -->", num_classes)
-
-
-    print("")
-
-    # Create directories if needed
-
-    if not os.path.isdir("%s\%s\%s" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model)):
-        os.makedirs("%s\%s\%s" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model))
-
-    # csv_path_val = 'F:/Mo/my3D_matlab/Test/idx-pred.csv'
-    #
-    # # Path to the folder with images. Images will be read from path + path_from_csv
-    #
-    # path2 = csv_path_val[:csv_path_val.rfind('/')] + '/' + str(tt) + '/'
-    #
-    # df = pd.read_csv(csv_path_val)
-    img_size = [128, 128, 13]
-    print("Loading the data from dataset: %s" % (args.testdataset))
-    filename1 = glob.glob("G:/Mo/my3D_matlab/" + args.testdataset + '/*.nii')
-    input_image_pred= loadDataGeneral_test_nii(filename1, img_size)
-    print(input_image_pred[0].shape)
-
-
-    # Run testing on ALL test images
-
-    for ind in range(len(input_image_pred)):
-
-        input_image = np.expand_dims(
-
-            np.float32(input_image_pred[ind]), axis=0) #/ 255.0
-
-        print(input_image.shape)
-
-        sys.stdout.write("\rRunning predict image %d / %d" % (ind + 1, len(input_image_pred)))
-
-        sys.stdout.flush()
-
-        st = time.time()
-
-        # output_image = sess.run(network, feed_dict={net_input: input_image})
-
-        output_image, stack = sess.run(network, feed_dict={net_input: input_image})
-
-        # model_checkpoint_name = "checkpoints/" + args.model + "/latest_model_" + "_" + args.dataset + ".ckpt"
-
-        # new_saver = tf.train.import_meta_graph('/home/scw4750/Liuhongkun/tfrecord/zooscan/Alexnet/Modal/model20170226041552612/mymodel.meta')
-
-        # run_times_list.append(time.time() - st)
-
-        output_image = np.array(output_image[0, :, :, :])
-
-        stack = np.array(stack[0, :, :, :, :])
-
-        # try to accommodate the size
-        w, l, h = 32, 32, 13
-        # w, l, h = 32, 35, 13
-
-        # output_image_resize = np.zeros((w, l, h))
-
-        stack_resize = np.zeros((l, w, h, 64))
-        output_resize = np.zeros((l, w, h))
-
-        for idx in range(13):
-
-            # img = output_image[:, :, idx, 1]
-
-            # img_sm = cv2.resize(img, (w, l), interpolation=cv2.INTER_LINEAR)
-
-            # output_image_resize[:, :, idx] = img_sm
-
-            for idx2 in range(64):#stack.shape[3]
-                stk = stack[:, :, idx, idx2]
-
-                stk_sm = cv2.resize(stk, (w, l), interpolation=cv2.INTER_LINEAR)
-
-                stack_resize[:, :, idx, idx2] = stk_sm
-            # output_resize[:, :, idx]=cv2.resize(output_image[:, :, idx], (w, l), interpolation=cv2.INTER_LINEAR)
-
-        new_image = nib.Nifti1Image(output_image, affine=np.eye(4))
-
-        final_weights_output = nib.Nifti1Image(stack_resize, affine=np.eye(4))
-
-        if ind < 10:
-
-
-            # nib.save(new_image, "%s/%s/%s/Z0000%s_regression.nii" % (
-            # "F:/Mo/my3D_matlab/Test", args.testdataset, args.model, str(ind)))
-
-            nib.save(final_weights_output, "%s/%s/%s/Z0000%s_final_weights.nii" % (
-            "G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-
-        elif ind < 100:
-
-            # nib.save(new_image, "%s/%s/%s/Z000%s_regression.nii" % (
-            # "F:/Mo/my3D_matlab/Test", args.testdataset, args.model, str(ind)))
-
-            nib.save(final_weights_output, "%s/%s/%s/Z000%s_final_weights.nii" % (
-            "G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-        elif ind < 1000:
-
-            # nib.save(new_image, "%s/%s/%s/Z00%s_regression.nii" % (
-            # "F:/Mo/my3D_matlab/Test", args.testdataset, args.model, str(ind)))
-
-            nib.save(final_weights_output, "%s/%s/%s/Z00%s_final_weights.nii" % (
-            "G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-        elif ind < 10000:
-
-            # nib.save(new_image, "%s/%s/%s/Z0%s_regression.nii" % (
-            # "F:/Mo/my3D_matlab/Test", args.testdataset, args.model, str(ind)))
-
-            nib.save(final_weights_output, "%s/%s/%s/Z0%s_final_weights.nii" % (
-            "G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-
-        else:
-
-            # nib.save(new_image,
-            #          "%s/%s/%s/Z%s_regression.nii" % ("F:/Mo/my3D_matlab/Test", args.testdataset, args.model, str(ind)))
-
-            nib.save(final_weights_output, "%s/%s/%s/Z%s_final_weights.nii" % (
-            "G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-
-        output_image_resize = helpers.reverse_one_hot(output_image)
-        for idx in range(13):
-            temp = output_image_resize[:, :, idx]
-            temp=temp.astype(np.float32)
-            output_resize[:, :, idx]=cv2.resize(temp, (w, l), interpolation=cv2.INTER_LINEAR)
-        print(output_image_resize.shape, output_resize.shape)
-
-        # out_vis_image = helpers.colour_code_segmentation(output_image, label_values)
-
-        new_image = nib.Nifti1Image(output_resize, affine=np.eye(4))
-
-        if ind < 10:
-
-            nib.save(new_image,
-                     "%s/%s/%s/Z0000%s_class.nii" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-
-        elif ind < 100:
-
-            nib.save(new_image,
-                     "%s/%s/%s/Z000%s_class.nii" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-        elif ind < 1000:
-
-            nib.save(new_image,
-                     "%s/%s/%s/Z00%s_class.nii" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-        elif ind < 10000:
-
-            nib.save(new_image,
-                     "%s/%s/%s/Z0%s_class.nii" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-
-        else:
-
-            nib.save(new_image,
-                     "%s/%s/%s/Z%s_class.nii" % ("G:/Mo/my3D_matlab/", args.testdataset, args.model, str(ind)))
-
-
-
-
-
-
-
-
-
