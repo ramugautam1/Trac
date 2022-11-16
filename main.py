@@ -304,9 +304,9 @@ CreateToolTip(button5, text='Start training the selected model with your trainin
 predModelName = tk.StringVar()
 modelPath = tk.StringVar()
 predict_output_path = tk.StringVar()
-def callPredict(model, imageName, startTime, endTime):
+def callPredict(model, image, startTime, endTime, predictOPpath):
 
-    segmentation_predict.predict(model, imageName, startTime, endTime, predict_output_path)
+    segmentation_predict.predict(model, image, int(startTime), int(endTime), predictOPpath)
 
 
 predict_page_greet = tk.Label(predict_page, text='Segment', font=('Courier', 40, 'bold'))

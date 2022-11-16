@@ -495,5 +495,4 @@ def train(model,epochs,gt_path,val_path,op_path):
 
     plt.savefig("%s/iou_vs_epochs.png" % (ckpt_path))
 
-
 ########################################################################################################################
