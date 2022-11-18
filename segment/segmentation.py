@@ -488,11 +488,11 @@ def train(model,epochs,gt_path,val_path,op_path):
 
     ax1 = fig.add_subplot(111)
 
-    ax1.plot(range(num_epochs), iou_list)
-    ax1.set_title("Average loss vs epochs")
-    ax1.set_xlabel("Epoch")
-    ax1.set_ylabel("Current loss")
-
-    plt.savefig("%s/iou_vs_epochs.png" % (ckpt_path))
+    # ax1.plot(range(num_epochs), iou_list)
+    # ax1.set_title("Average loss vs epochs")
+    # ax1.set_xlabel("Epoch")
+    # ax1.set_ylabel("Current loss")
+    #
+    # plt.savefig("%s/iou_vs_epochs.png" % (ckpt_path))
 
 ########################################################################################################################

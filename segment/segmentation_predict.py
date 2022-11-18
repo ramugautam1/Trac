@@ -101,7 +101,8 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-    
+
+
 def predictionSampleGeneration(image,startpoint,endpoint):
     sampleAddress = os.path.dirname(image) + '/' + os.path.basename(image).split('.')[0] + '_PredSamples'
     if not os.path.isdir(sampleAddress):
@@ -164,7 +165,8 @@ def predictionSampleGeneration(image,startpoint,endpoint):
     print('Data Preparation Complete!')
     return sampleAddress
 
-def predict(model,image, startpoint, endpoint, op_folder):
+
+def predict(model,image, startpoint, endpoint, modelCheckpointName, op_folder):
     model = model
     image = image
     startpoint = startpoint
@@ -173,7 +175,6 @@ def predict(model,image, startpoint, endpoint, op_folder):
     mode = 'predict'
     
     pdataset = predictionSampleGeneration(image,startpoint,endpoint)
-    
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--class_balancing', type=str2bool, default=True, help='Whether to use median frequency class weights to balance the classes in the loss')
@@ -264,8 +265,8 @@ def predict(model,image, startpoint, endpoint, op_folder):
     if init_fn is not None:
         init_fn(sess)
 
-    model_checkpoint_name = "checkpoints/" + model + '/' + 'Data_Ecad2020' + "/latest_model_" + "_" + 'Data_Ecad2020' + ".ckpt"
-
+    # model_checkpoint_name = "checkpoints/" + model + '/' + 'Data_Ecad2020' + "/latest_model_" + "_" + 'Data_Ecad2020' + ".ckpt"
+    model_checkpoint_name = modelCheckpointName
     if args.continue_training or not mode == "train":
         print('Loaded latest model checkpoint')
         print(model_checkpoint_name)
