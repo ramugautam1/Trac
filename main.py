@@ -5,6 +5,7 @@ from runTracking import runTracking
 import tkinter.font as font
 from tkinter import ttk
 from segment import segmentation, segmentation_predict
+import os
 
 Font_tuple = ("Courier",45,"bold")
 
@@ -301,12 +302,17 @@ CreateToolTip(button5, text='Start training the selected model with your trainin
 # button6 = tk.Button(train_page, text='printModelName', command=lambda: print(modelName.get()))
 # button6.place(x=400, y= 800)
 ###################################################
-predModelName = tk.StringVar()
-modelPath = tk.StringVar()
+trainedModelPath = tk.StringVar()
+trainedModel = tk.StringVar()
 predict_output_path = tk.StringVar()
-def callPredict(model, image, startTime, endTime, predictOPpath):
 
-    segmentation_predict.predict(model, image, int(startTime), int(endTime), predictOPpath)
+def getTrainedModel():
+    trainedModelPath.set(fd.askdirectory(initialdir=os.getcwd()+'/checkpoints/'+predictModelName.get()))
+    trainedModel.set(trainedModelPath.get() + "/latest_model_" + "_" + trainedModelPath.get().split('/')[-1] + '.ckpt')
+
+
+def callPredict(model, image, startTime, endTime, trModelPath, predictOPpath):
+    segmentation_predict.predict(model=model, image=image, startpoint=int(startTime), endpoint=int(endTime), modelCheckpointName=trModelPath, op_folder=predictOPpath)
 
 
 predict_page_greet = tk.Label(predict_page, text='Segment', font=('Courier', 40, 'bold'))
@@ -336,23 +342,25 @@ entryPr4 = tk.Entry(predict_page, textvariable=predictOutputPath, font=('System'
 startT = tk.StringVar()
 endT = tk.StringVar()
 label2 = tk.Label(predict_page, text="Start Time", font=('System', 15))
-entryPr1 = tk.Entry(predict_page, textvariable=startT, font=('System', 15))
+entryPr1 = tk.Entry(predict_page, textvariable=startT, font=('System', 15), width=10)
 entryPr1.insert(0,'1')
 label3 = tk.Label(predict_page, text='End Time', font=('System', 15))
-entryPr2 = tk.Entry(predict_page, textvariable=endT, font=('System', 15))
+entryPr2 = tk.Entry(predict_page, textvariable=endT, font=('System', 15),width=10)
 entryPr2.insert(0,'41')
-buttonPr4 = tk.Button(predict_page, text="Select Trained Model",font=('System',15))
-entryPr5 = tk.Entry(predict_page,textvariable=modelPath, font=('System',15))
+
+buttonPr4 = tk.Button(predict_page, text="Select Folder with Trained Model",font=('System', 15), command=lambda: getTrainedModel())
+entryPr5 = tk.Entry(predict_page,textvariable=trainedModel, font=('System',15))
+
 buttonPr5 = tk.Button(predict_page,width=10, text="Check",
                       command=lambda: print(predictModelName.get(), imageName.get(), startT.get(),
                                             endT.get(), predictOutputPath.get()), font=('System', 15))
 buttonPr6 = tk.Button(predict_page, width=10, text="RUN", background="blue", foreground="white",
-                      command=lambda: callPredict(predictModelName.get(), imageName.get(), startT.get(), endT.get(),  predictOutputPath.get()),
-                      font=('System', 15))
+                      command=lambda: callPredict(predictModelName.get(), imageName.get(), startT.get(), endT.get(),
+                                                  trainedModelPath.get(), predictOutputPath.get()), font=('System', 15))
 
 buttonPr1.place(x=50, y=50)
 
-label1.place(x=50, y=200); modelMenu.place(x=500, y=200)
+label1.place(x=50, y=200); modelMenu.place(x=520, y=200)
 label2.place(x=50, y=250); entryPr1.place(x=520, y=250)
 label3.place(x=50, y=300); entryPr2.place(x=520, y=300)
 buttonPr2.place(x=50, y=350); entryPr3.place(x=520, y=350)
@@ -379,13 +387,16 @@ imgname = tk.StringVar()
 segloc = tk.StringVar()
 trackloc = tk.StringVar()
 
-strT = tk.IntVar()
-enT = tk.IntVar()
-trbT = tk.IntVar()
-ost = tk.IntVar()
+# strT = tk.IntVar()
+# enT = tk.IntVar()
+# trbT = tk.IntVar()
+# ost = tk.IntVar()
 p1n = tk.StringVar()
 p2n = tk.StringVar()
-
+strT = tk.StringVar()
+enT = tk.StringVar()
+trbT = tk.StringVar()
+ost = tk.StringVar()
 
 def segOPfolder():
     segloc.set(fd.askdirectory())
@@ -417,9 +428,9 @@ buttonTr5 = tk.Button(track_page, width=10, text="Check", font=('System', 15), c
 buttonTr6 = tk.Button(track_page, width=10, text="RUN", font=('System', 15), background="blue", foreground="white", command=lambda: runTracking(imageName=imgname.get(),
                                                                           segmentationOPFolder=segloc.get(),
                                                                           trackingOPFolder=trackloc.get(),
-                                                                          startTime=strT.get(),
-                                                                          endTime=enT.get(), trackbackTime=trbT.get(),
-                                                                          min_obj_size=ost.get(),
+                                                                          startTime=int(strT.get()),
+                                                                          endTime=int(enT.get()), trackbackTime=int(trbT.get()),
+                                                                          min_obj_size=int(ost.get()),
                                                                           protein1Name=p1n.get(),
                                                                           protein2Name=p2n.get()))
 
@@ -435,13 +446,13 @@ entryTr2 = ttk.Entry(track_page, textvariable=segloc, font=('System',  15))
 entryTr3 = ttk.Entry(track_page, textvariable=trackloc, font=('System',  15))
 
 entryTr4 = ttk.Entry(track_page, textvariable=strT, font=('System',  15))
-entryTr4.insert(1, '1')
+entryTr4.insert(0, '1')
 entryTr5 = ttk.Entry(track_page, textvariable=enT, font=('System',  15))
-entryTr5.insert(1, '41')
+entryTr5.insert(0, '41')
 entryTr6 = ttk.Entry(track_page, textvariable=trbT, font=('System',  15))
-entryTr6.insert(1, '2')
+entryTr6.insert(0, '2')
 entryTr7 = ttk.Entry(track_page, textvariable=ost, font=('System',  15))
-entryTr7.insert(1, '27')
+entryTr7.insert(0, '27')
 # entryTr8 = ttk.Entry(track_page, textvariable=p1n, font=('System',15,'bold'))
 # entryTr9 = ttk.Entry(track_page, textvariable=p2n, font=('System',15,'bold'))
 
