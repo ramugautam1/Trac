@@ -14,6 +14,9 @@ def starline():
 def niftiread(arg):
     return np.asarray(nib.load(arg).dataobj).astype(np.float32).squeeze()
 
+def niftireadI(arg):
+    return np.asarray(nib.load(arg).dataobj).astype(np.int16).squeeze()
+
 
 def niftiwrite(a, b):
     nib.save(nib.Nifti1Image(np.uint32(a),affine=np.eye(4)),b)

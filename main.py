@@ -200,7 +200,7 @@ def browse_validation_data():
 
 
 def browseImage():
-    imageName.set(fd.askopenfilename(defaultextension=".nii", filetypes=[("NIFTI Files", "*.nii")]))
+    imageName.set(fd.askopenfilename(defaultextension=".nii", filetypes=[("NIFTI Files", "*.nii")], initialdir='/home/nirvan/Desktop/AppTestRun'))
     # gt_path.set(imageName)
 
 
@@ -214,7 +214,7 @@ def trainOutputLocation():
 
 def predictOutputLocation():
     try:
-        predictOutputPath.set(fd.askdirectory())
+        predictOutputPath.set(fd.askdirectory(initialdir='/home/nirvan/Desktop/AppTestRun'))
     except:
         predictOutputPath.set('/default/predict/output/path/')
 
@@ -356,7 +356,7 @@ buttonPr5 = tk.Button(predict_page,width=10, text="Check",
                                             endT.get(), predictOutputPath.get()), font=('System', 15))
 buttonPr6 = tk.Button(predict_page, width=10, text="RUN", background="blue", foreground="white",
                       command=lambda: callPredict(predictModelName.get(), imageName.get(), startT.get(), endT.get(),
-                                                  trainedModelPath.get(), predictOutputPath.get()), font=('System', 15))
+                                                  trainedModel.get(), predictOutputPath.get()), font=('System', 15))
 
 buttonPr1.place(x=50, y=50)
 

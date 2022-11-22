@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import gc
+
 from segment.load_data_nii import loadDataGeneral as loadDataGeneral_nii
 from segment.load_data_nii import loadDataGeneral_test as loadDataGeneral_test_nii
 from segment.load_data import loadDataGeneral
@@ -496,3 +498,4 @@ def train(model,epochs,gt_path,val_path,op_path):
     # plt.savefig("%s/iou_vs_epochs.png" % (ckpt_path))
 
 ########################################################################################################################
+    gc.collect()

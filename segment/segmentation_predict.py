@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import gc
+
 from segment.load_data_nii import loadDataGeneral as loadDataGeneral_nii
 from segment.load_data_nii import loadDataGeneral_test as loadDataGeneral_test_nii
 from segment.load_data import loadDataGeneral
@@ -10,7 +12,7 @@ import segment.FCN as FCN
 # import models.FRRN3D, models.FCN3D, models.GCN3D, models.AdapNet3D, models.ICNet3D, models.PSPNet3D, models.RefineNet3D, models.BiSeNet3D, models.DDSC3D
 # import models.DenseASPP3D, models.DeepLabV3_plus3D
 
-from functions import niftiread, niftiwriteF
+from functions import niftireadI, niftiwriteF
 
 import matplotlib.pyplot as plt
 import numpy as np # Path to csv-file. File should contain X-ray filenames as first column,
@@ -113,11 +115,26 @@ def predictionSampleGeneration(image,startpoint,endpoint):
     t1 = startpoint
     t2 = endpoint
 
-    V_sample = niftiread(image)
+    V_sample = niftireadI(image)
+
+    V_sample = V_sample+32768
+
+    V_sample = V_sample.astype(np.float)
+
+    V_sample /= 65536
+    V_sample += 0.5
+
+    print(type(V_sample))
+    print(type(V_sample[1,1,1,1,1]))
+    print(np.max(V_sample))
+    print(np.min(V_sample))
+    print(np.mean(V_sample))
+
     for t in range(t1 - 1, t2):
         c_all = 1
         V_sample_t = np.squeeze(V_sample[:, :, :, t, 0])
         if np.mean(V_sample_t) < 0:
+            print("%%%"*10)
             V_sample_t = V_sample_t + 32768
         if not os.path.isdir(sampleAddress + '/' + str(t + 1) + '/'):  # Create directory for output for every timepoint
             os.makedirs(sampleAddress + '/' + str(t + 1) + '/')
@@ -141,7 +158,6 @@ def predictionSampleGeneration(image,startpoint,endpoint):
                 for ix in range(I3d[2]):
                     V_s[:, :, ix] = cv2.resize(V_sample_t[a:b, c:d, ix], (I3d2[0], I3d2[1]),
                                                interpolation=cv2.INTER_LINEAR)
-                    # V_s = (V_s / 32768 + 1) / 2
 
                 for ix in range(I3d[2]):
                     V_o[:, :, ix] = V_sample_t[a:b, c:d, ix]
@@ -163,6 +179,7 @@ def predictionSampleGeneration(image,startpoint,endpoint):
                 c_all += 1
 
     print('Data Preparation Complete!')
+    # sampleAddress = '/home/nirvan/Desktop/AppTestRun/PredSamples'
     return sampleAddress
 
 
@@ -267,6 +284,8 @@ def predict(model,image, startpoint, endpoint, modelCheckpointName, op_folder):
 
     # model_checkpoint_name = "checkpoints/" + model + '/' + 'Data_Ecad2020' + "/latest_model_" + "_" + 'Data_Ecad2020' + ".ckpt"
     model_checkpoint_name = modelCheckpointName
+    print(model_checkpoint_name)
+
     if args.continue_training or not mode == "train":
         print('Loaded latest model checkpoint')
         print(model_checkpoint_name)
@@ -365,4 +384,4 @@ def predict(model,image, startpoint, endpoint, modelCheckpointName, op_folder):
             else:
                 nib.save(new_image, "%s/%s/%s/%s/Z%s_class.nii" % (addrSegRes, os.path.basename(image).split('.')[0]+'_SegmentationOutput', model, tt, str(ind)))
 
-
+    gc.collect()
