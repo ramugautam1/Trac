@@ -191,7 +191,7 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         # plt.show()
 
         fig.savefig(addr2 + str(time) + '_3Dconnection2' + '.png')
-
+        plt.close(fig)
         niftiwriteF(Weights, addr2 + 'Weights_' + tt + '.nii')
 
         niftiwriteF(np.array(Registration), addr2 + 'Registration_' + tt + '.nii')
