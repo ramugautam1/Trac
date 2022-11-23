@@ -1,4 +1,5 @@
 # import cv2
+import gc
 import glob as glob
 import math as math
 import os
@@ -35,11 +36,11 @@ def prepare(imageName, protein1Name, protein2Name):
     protein1name = protein1Name
     protein2name = protein2Name
 
-    if not os.path.isdir(originalImageAddress + "3DImage"):
-        os.makedirs(originalImageAddress + "3DImage")
+    # if not os.path.isdir(originalImageAddress + "3DImage"):
+    #     os.makedirs(originalImageAddress + "3DImage")
 
-    dirp1 = originalImageAddress + '3DImage/' + originalImageName + '/' + protein1name
-    dirp2 = originalImageAddress + '3DImage/' + originalImageName + '/' + protein2name
+    dirp1 = originalImageAddress + '3DImage/' + originalImageName.split('.')[0] + '/' + protein1name
+    dirp2 = originalImageAddress + '3DImage/' + originalImageName.split('.')[0] + '/' + protein2name
 
     if not os.path.isdir(dirp1):
         os.makedirs(dirp1)
@@ -85,4 +86,5 @@ def prepare(imageName, protein1Name, protein2Name):
             sliceB.save(tifname2)
 
     del sliceB, slice2, slice1, sliceA, originalImage, originalImageFloat32  # clear; free up some memory
+    gc.collect()
     ####################################################################################################################
