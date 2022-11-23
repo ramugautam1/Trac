@@ -1,5 +1,5 @@
 import tkinter as tk
-from PIL import Image, ImageTk
+# from PIL import Image, ImageTk
 import tkinter.filedialog as fd
 from runTracking import runTracking
 import tkinter.font as font
