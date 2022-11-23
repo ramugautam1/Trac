@@ -1,3 +1,4 @@
+import gc
 import glob as glob
 import cv2
 import math as math
@@ -41,14 +42,12 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
     segAddr = segmentationOutputAddress
     trackAddr = trackingOutputAddress
     # for time in range(t1 - 1, t2):
+
     for time in range(t1, t2 + 1):
         print(f'    time point   {time}')
         tic = datetime.now()
         tt = str(time)
-        # addr = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Segmentation_Result_EcadMyo_08/EcadMyo_08/FC-DenseNet/'+ tt + '/'
-        # print(addr)
-        # addr2 = '/home/nirvan/Desktop/Projects/EcadMyo_08_all/Tracking_Result_EcadMyo_08/' + str(time) + '/'
-        # print(addr2)
+
         addr = segAddr + tt + '/'
         addr2 = trackAddr + str(time) + '/'
         print(addr)
@@ -62,7 +61,6 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         Files1 = sorted(glob.glob(addr + '*.nii'))
         # print(Files1)
         Fullsize = np.zeros(shape=(512, 280, 15))
-        Fullsize_regression = np.zeros(shape=(512, 280, 15))
         Fullsize_input = np.zeros(shape=(512, 280, 15))
         Weights = np.zeros(shape=(512, 280, 15, 64))
 
@@ -104,6 +102,7 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
                 Fullsize_input[a:b, c:d, :] = V3_arr.squeeze()
                 c_file = c_file + 4
 
+
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
@@ -140,15 +139,15 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
 
         niftiwrite(Fullsize2, addr2 + 'Fullsize' + '_' + tt + '.nii')
 
-        # code to save 3d figure
-        plt.rcParams['figure.figsize'] = (10, 10)
-        plt.rcParams['figure.dpi'] = 500
-        default_cycler = cycler(color=[[1, 0, 0, 0.25], [0, 1, 0, 0.5], [0, 0, 1, 0.5], [0, 1, 1, 0.5]])
-        plt.rc('axes', prop_cycle=default_cycler)
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_box_aspect((350,280,20))
+        # # code to save 3d figure
+        # plt.rcParams['figure.figsize'] = (10, 10)
+        # plt.rcParams['figure.dpi'] = 500
+        # default_cycler = cycler(color=[[1, 0, 0, 0.25], [0, 1, 0, 0.5], [0, 0, 1, 0.5], [0, 1, 1, 0.5]])
+        # plt.rc('axes', prop_cycle=default_cycler)
+        #
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection='3d')
+        # ax.set_box_aspect((350,280,20))
 
 
         VoxelList = stats1.coords
@@ -165,33 +164,39 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         # ax.voxels(myCube)
         Registration = []
 
-        myCube = np.zeros(shape=(512, 280, 15))
+        # myCube = np.zeros(shape=(512, 280, 15))
+
+
         print('Drawing figure.', end='')
         for i in range(0, VoxelList.shape[0]):
             value = i
             Registration.append([value, stats1['centroid-0'][i], stats1['centroid-1'][i], stats1['centroid-2'][i]])
             if(i%200 == 0):
                 print('.', end='')
-            # c1 = [250-i, 100, 100] if i<255 else [110,300-i,110]
-            s = str(i+1)
-            for j in range(0, np.size(VoxelList[i], axis=0)):
-                myCube[VoxelList[i][j][0], VoxelList[i][j][1], VoxelList[i][j][2]] = i
-            # ax.text(VoxelList[i][j][0] + 1, VoxelList[i][j][1] + 1, VoxelList[i][j][2] + 1, s,
-            #         (0, 1, 0), fontsize=5, color='red')
-            # ax.text(505,280,14, str(VoxelList.shape[0]), (1,1,1), fontsize=10, color='blue')
+
+            # s = str(i+1)
+            # for j in range(0, np.size(VoxelList[i], axis=0)):
+            #     myCube[VoxelList[i][j][0], VoxelList[i][j][1], VoxelList[i][j][2]] = i
+            #
+            #
+            # # ax.text(VoxelList[i][j][0] + 1, VoxelList[i][j][1] + 1, VoxelList[i][j][2] + 1, s,
+            # #    .text(505,280,14, str(VoxelList.shape[0]), (1     (0, 1, 0), fontsize=5, color='red')
+            # # ax,1,1), fontsize=10, color='blue')
+
+
         #
         # for ww in range(512):
         #     for xx in range(280):
         #         for zz in range(15):
         #             myCube[ww, xx, zz] = originalImage[ww,xx,zz,time,1]
 
-        ax.voxels(myCube)
+        # ax.voxels(myCube)
 
         print('\nSaving Files...')
         # plt.show()
 
-        fig.savefig(addr2 + str(time) + '_3Dconnection2' + '.png')
-        plt.close(fig)
+        # fig.savefig(addr2 + str(time) + '_3Dconnection2' + '.png')
+
         niftiwriteF(Weights, addr2 + 'Weights_' + tt + '.nii')
 
         niftiwriteF(np.array(Registration), addr2 + 'Registration_' + tt + '.nii')
@@ -203,8 +208,16 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         print(f'{tt}        completed        time: {toc-tic}')
         dashline()
 
+        # print(gc.get_count())
+        # del myCube, Fullsize, Fullsize_regression, Fullsize2, Fullsize_input, Weights, fig, stack_after, stack_after_BW, stack_after_label, tic, toc, Registration, VoxelList, orgnum, CC, addr, addr2
+        # gc.collect()
+        # print(gc.get_count())
+
+
+
     toctoc = datetime.now()
     print(f'Step 1 completed in {toctoc-tictic}')
 
-    del Fullsize, Fullsize_regression, Fullsize2, Fullsize_input, stats1, \
-        orgnum, stack_after, stack_after_BW, stack_after_label, i1, i2, iy, tt
+    del stats1, orgnum, i1, i2, iy, tt
+
+    gc.collect()

@@ -8,7 +8,7 @@ from trackStep2 import trackStep2
 
 
 def runTracking(imageName, segmentationOPFolder, trackingOPFolder, startTime, endTime, trackbackTime, min_obj_size, protein1Name, protein2Name):
-    prepare(imageName, 'proteinA_'+protein1Name, 'proteinB_'+protein2Name)
+    prepare(imageName, 'proteinA_', 'proteinB_')
     trackStep1(segmentationOPFolder+'/',trackingOPFolder+'/',startTime,endTime)
     trackStep2(track_op_folder=trackingOPFolder+'/', trackbackT=trackbackTime, startpoint=startTime, endpoint=endTime,
                protein1Name='proteinA_'+protein1Name, protein2Name='proteinB_'+protein2Name, imageName=imageName)

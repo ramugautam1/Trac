@@ -279,7 +279,7 @@ button1.place(x=50, y=50)
 label2.place(x=50, y=250)
 entry1.place(x=500, y=250)
 button2.place(x=50, y=300)
-button3.place(x=50, y=400)
+# button3.place(x=50, y=400)
 buttonVal.place(x=50, y=350)
 entryVal.place(x=500, y=350)
 
@@ -287,7 +287,7 @@ button4.place(x=50, y=500)
 button5.place(x=50, y=550)
 
 entry2.place(x=500, y=300)
-entry3.place(x=500, y=400)
+# entry3.place(x=500, y=400)
 
 CreateToolTip(train_page_greet,text='You can use your own data with ground truth to train a segmentation model.\n'
                                     'If you want to use an already-trained model, please go back and select Predict option.')
