@@ -6,6 +6,7 @@ import tkinter.font as font
 from tkinter import ttk
 from segment import segmentation, segmentation_predict
 import os
+from familyTreesGenerator import generateFamilyTrees
 
 Font_tuple = ("Courier",45,"bold")
 
@@ -509,8 +510,8 @@ def selectExcelFile():
     excelFile.set(fd.askopenfilename(defaultextension='.xlsx', filetypes=[("Excel Files", "*.xlsx")]))
 def selectFtOutputFolder():
     ftOpFolder.set(fd.askdirectory())
-def generateFamilyTrees():
-    print("Processing Family Trees...")
+# def generateFamilyTrees():
+#     print("Processing Family Trees...")
 
 def generateFamilyTree():
     print('Generating Family Tree for your object...')
@@ -530,7 +531,7 @@ entryFt4 = tk.Entry(fam_page, textvariable=branchMinLen, font=('System',15))
 entryFt4.insert(1,'5')
 
 buttonFt6 = tk.Button(fam_page, text="Generate Family Tree", font=('System',15), command=lambda: generateFamilyTree(),background='blue',foreground='white')
-buttonFt7 = tk.Button(fam_page, text="Generate All Family Trees", command=lambda: generateFamilyTrees(),font=('System',15),background="navy", foreground="white")
+buttonFt7 = tk.Button(fam_page, text="Generate All Family Trees", command=lambda: generateFamilyTrees(excelFile=excelFile.get(),ftFolder=ftOpFolder.get()), font=('System',15),background="navy", foreground="white")
 buttonFt8 = tk.Button(fam_page, text='Enter Object ID', font=('System',15))
 entryFt5 = tk.Entry(fam_page,textvariable=objId, font=('System',15))
 
