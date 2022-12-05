@@ -7,6 +7,7 @@ from tkinter import ttk
 from segment import segmentation, segmentation_predict
 import os
 from familyTreesGenerator import generateFamilyTrees
+from convert2nii import czi2nii, tif2nii
 
 Font_tuple = ("Courier",45,"bold")
 
@@ -70,6 +71,7 @@ track_page = tk.Frame(window)
 fam_page = tk.Frame(window)
 analysis_page = tk.Frame(window)
 help_page = tk.Frame(window)
+convert_page = tk.Frame(window)
 
 train_page = tk.Frame(window)
 test_page = tk.Frame(window)
@@ -77,7 +79,7 @@ predict_page = tk.Frame(window)
 cross_corr_page = tk.Frame(window)
 
 def_font = font.Font(family='System')
-for frame in (homepage, seg_page, track_page, fam_page, help_page, train_page, test_page, predict_page,cross_corr_page):
+for frame in (homepage, seg_page, track_page, fam_page, help_page, train_page, test_page, predict_page,cross_corr_page,convert_page):
     frame.grid(row=0, column=0, sticky='nsew')
 
 
@@ -145,15 +147,18 @@ buttonH2 = tk.Button(homepage, text="Tracking", width=15,
                      command=lambda: show_frame(track_page), font=('System', 20))
 buttonH3 = tk.Button(homepage, width=15, text="Family Tree", command=lambda: show_frame(fam_page), font=('System', 20))
 buttonH4 = tk.Button(homepage, width=15, text="Analysis", command=lambda: show_frame(analysis_page), font=('System', 20))
+buttonH5 = tk.Button(homepage, width=15, text = "Convert to .nii", command=lambda : show_frame(convert_page), font=('System',20))
 buttonH1.place(x=200, y=200)
 buttonH2.place(x=200, y=300)
 buttonH3.place(x=200, y=400)
 buttonH4.place(x=200, y=500)
+buttonH5.place(x=200, y=600)
 
 CreateToolTip(buttonH2, text='Click here to track objects in segmented images.!')
 CreateToolTip(buttonH1, text='Click here for Segmentation!\nYou can proceed by training a model with your ground truth or \nyou can use pre-trained models for segmentation.')
 CreateToolTip(buttonH3, text='Click here to draw Family Trees using Tracking results!')
 CreateToolTip(buttonH4, text='Click here for Analysis Menu!')
+CreateToolTip(buttonH5, text='Clich here to convert files to .nii format')
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Segmentation page
@@ -602,5 +607,26 @@ help_page_greet.place(x=50, y=120)
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+filesFolder = tk.StringVar()
+allFiles = tk.StringVar()
+def selectFilesFolder():
+    filesFolder.set(fd.askdirectory())
+
+convert_page_greet = tk.Label(convert_page, text='Convert .czi and .tif to .nii', font=('Courier', 40,'bold'))
+buttonCon1 = tk.Button(convert_page, text="Back", command=lambda: show_frame(homepage), font=('System', 15))
+buttonCon2 = tk.Button(convert_page, text="Select Folder with Files", command=lambda : selectFilesFolder(),font=('System',15))
+entryCon1 = tk.Entry(convert_page, textvariable=filesFolder, font=('System',15))
+
+
+buttonCon3 = tk.Button(convert_page, text="Convert .czi to .nii", command=lambda : czi2nii(filesFolder.get()),font=('System',15))
+buttonCon4= tk.Button(convert_page,text="Convert .tif to .nii",command=lambda : tif2nii(filesFolder.get()),font=('System',15))
+
+buttonCon1.place(x=50,y=50)
+buttonCon2.place(x=50,y=100)
+entryCon1.place(x=500,y=100)
+buttonCon3.place(x=50,y=250)
+buttonCon4.place(x=50,y=300)
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 window.mainloop()

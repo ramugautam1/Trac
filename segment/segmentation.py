@@ -255,7 +255,7 @@ def train(model,epochs,gt_path,val_path,op_path):
     print("Loading the data ...")
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    csv_path_training = dataset_path + '/idx-train.csv'
+    csv_path_training = dataset_path + '/idx_train.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path1 = csv_path_training[:csv_path_training.rfind('/')] + '/'
 
@@ -265,7 +265,7 @@ def train(model,epochs,gt_path,val_path,op_path):
     X_train, y_train = loadDataGeneral(df, path1, img_size)
     print(X_train.shape, y_train.shape)
 
-    csv_path_val = valdataset_path + '/idx-val.csv'
+    csv_path_val = valdataset_path + '/idx_val.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path2 = csv_path_val[:csv_path_val.rfind('/')] + '/'
 
