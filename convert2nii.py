@@ -44,7 +44,6 @@ def tif2nii(folder):
         if np.size(im,2)==13:
             newArr[:,:,1:14]=im[:,:,:,0]
             newArr2[:,:,1:14]=im[:,:,:,1]
-
         # #To save as jpg
         # for ir in range(15):
         #     ext = str(0) if ir < 10 else ''
