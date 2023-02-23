@@ -20,6 +20,7 @@ import cc3d
 from mpl_toolkits.mplot3d import Axes3D
 from datetime import datetime
 from cycler import cycler
+import skimage
 
 from functions import niftiwrite, dashline, starline, niftiwriteF
 
@@ -31,7 +32,7 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
     starline()
     tictic = datetime.now()
 
-    colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
+    # colormap = scio.loadmat('/home/nirvan/Desktop/Projects/MATLAB CODES/colormap.mat')
     t1 = startTime
     t2 = endTime
     # t2 = 1
@@ -106,7 +107,7 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         #Remove small itty bitty masks
         Fullsize2 = Fullsize.astype(bool)
 
-        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 60))
+        Fullsize2 = np.double(morphology.remove_small_objects(Fullsize2, 9))
 
         stack_after = Fullsize2
 
@@ -138,6 +139,9 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         nib.save(nib.Nifti1Image(np.uint32(stack_after_label), affine=np.eye(4)), addr2 + 'Fullsize_label_' + tt + '.nii')
 
         niftiwrite(Fullsize2, addr2 + 'Fullsize' + '_' + tt + '.nii')
+        FS2 = Fullsize2[:,:,1:14]
+        FS2 = skimage.transform.resize(FS2,(512,320,13))
+        niftiwrite(FS2,addr2 + 'FS' + '_' + tt + '.nii')
 
         # # code to save 3d figure
         # plt.rcParams['figure.figsize'] = (10, 10)
@@ -212,7 +216,6 @@ def trackStep1(segmentationOutputAddress, trackingOutputAddress, startTime, endT
         # del myCube, Fullsize, Fullsize_regression, Fullsize2, Fullsize_input, Weights, fig, stack_after, stack_after_BW, stack_after_label, tic, toc, Registration, VoxelList, orgnum, CC, addr, addr2
         # gc.collect()
         # print(gc.get_count())
-
 
 
     toctoc = datetime.now()
