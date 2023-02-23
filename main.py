@@ -119,6 +119,8 @@ my_menu.add_command(label='Tracking', command=lambda: show_frame(track_page))
 my_menu.add_separator()
 my_menu.add_command(label='Family Tree', command=lambda: show_frame(fam_page))
 my_menu.add_separator()
+my_menu.add_command(label='Convert Files', command=lambda: show_frame(convert_page))
+my_menu.add_separator()
 my_menu.add_cascade(label='Analysis', menu=ana_menu)
 my_menu.add_separator()
 my_menu.add_command(label='Help', command=lambda: show_frame(help_page))
@@ -206,7 +208,7 @@ def browse_validation_data():
 
 
 def browseImage():
-    imageName.set(fd.askopenfilename(defaultextension=".nii", filetypes=[("NIFTI Files", "*.nii")], initialdir='/home/nirvan/Desktop/AppTestRun'))
+    imageName.set(fd.askopenfilename(defaultextension=".tif", filetypes=[("TIF Files","*.tif"),("NIFTI Files", "*.nii"),("TIFF Files","*.tiff")], initialdir='/home/nirvan/Desktop/AppTestRun'))
     # gt_path.set(imageName)
 
 
@@ -413,7 +415,7 @@ def trackOPfolder():
 
 
 def browseImageTr():
-    imgname.set(fd.askopenfilename(defaultextension='.nii', filetypes=[("NIFTI Files", "*.nii")]))
+    imgname.set(fd.askopenfilename(defaultextension='.nii', filetypes=[("NIFTI Files", "*.nii"),("TIF Files","*.tif"),("TIFF Files","*.tiff")]))
 
 
 # def callTracking():

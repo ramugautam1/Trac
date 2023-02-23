@@ -2,12 +2,15 @@ from __future__ import print_function
 
 import gc
 
+import skimage
+
 from segment.load_data_nii import loadDataGeneral as loadDataGeneral_nii
 from segment.load_data_nii import loadDataGeneral_test as loadDataGeneral_test_nii
 from segment.load_data import loadDataGeneral
 from segment.build_model import build_mymodel
 import segment.utils as utils
 import segment.FCN as FCN
+import tifffile
 # import FCN2, models.MobileUNet3D, models.resnet_v23D, models.Encoder_Decoder3D, models.Encoder_Decoder3D_contrib, models.DeepLabp3D, models.DeepLabV33D
 # import models.FRRN3D, models.FCN3D, models.GCN3D, models.AdapNet3D, models.ICNet3D, models.PSPNet3D, models.RefineNet3D, models.BiSeNet3D, models.DDSC3D
 # import models.DenseASPP3D, models.DeepLabV3_plus3D
@@ -114,25 +117,73 @@ def predictionSampleGeneration(image,startpoint,endpoint):
     I3d2 = [32, 32, 15]
     t1 = startpoint
     t2 = endpoint
+    # if image.endswith('.tif') or image.endswith('.tiff'):
+    #     V_sample = tifffile.imread(image)
+    #     if(np.size(np.shape(V_sample)))==5:
+    #         V_sample = np.transpose(V_sample,(4,3,2,1,0))
+    #     elif np.size(np.shape(V_sample))==4:
+    #         V_sample = np.transpose(V_sample,(3,2,1,0))
 
-    V_sample = niftireadI(image)
+    ####
+    if image.endswith('.tif') or image.endswith('.tiff'):
+        V_sample = tifffile.imread(image)
+        if(np.size(np.shape(V_sample)))==5:
+            V_sample = np.transpose(V_sample,(4,3,2,1,0))
+        elif np.size(np.shape(V_sample))==4:
+            V_sample = np.transpose(V_sample,(3,2,1,0))
+    elif image.endswith('.nii'):
+        V_sample = niftireadI(image)
 
-    V_sample = V_sample+32768
+    V_sample = V_sample[:,:,:,t1-1:t2]
+    V_sample[V_sample>(np.mean(V_sample)+20*np.std(V_sample))] = np.mean(V_sample)+20*np.std(V_sample)
 
-    V_sample = V_sample.astype(np.float)
 
-    V_sample /= 65536
-    V_sample += 0.5
+###############################
+    V_sample_0 = np.zeros((512, np.shape(V_sample)[1], 15, np.shape(V_sample)[-1]))
+    if np.shape(V_sample)[2]==13:
+        # V_sample_0[:,:,0,:] = V_sample[:,:,1,:]
+        # V_sample_0[:,:,14,:] = V_sample[:,:,12,:]
+        V_sample_0[:,:,1:14,:] = V_sample
+    elif np.shape(V_sample)[2]==15:
+        V_sample_0 = V_sample
+    V_sample = V_sample_0.copy()
 
-    print(type(V_sample))
-    print(type(V_sample[1,1,1,1,1]))
-    print(np.max(V_sample))
-    print(np.min(V_sample))
-    print(np.mean(V_sample))
+    ####
+    V_sample = skimage.transform.resize(V_sample,(512,280,15,np.shape(V_sample)[-1]))
 
-    for t in range(t1 - 1, t2):
+    V_sample  = (V_sample-np.min(V_sample))/(np.max(V_sample)-np.min(V_sample))*0.5 + 0.5 #should be *0.5 but missed a lot of objects
+    V_to_save = V_sample[:,:,:,:]
+    # V_to_view = V_sample[:,:,1:14,:]
+
+    V_to_save = V_to_save*32768-49152
+    V_to_save = nib.Nifti1Image(V_to_save,np.eye(4))
+    nib.save(V_to_save,image[:-4]+'.nii')
+
+    # V_to_view = V_to_view[:,:,:,:]
+
+
+
+
+    # V_sample = V_sample+32768
+    #
+    # V_sample = V_sample.astype(np.float)
+    #
+    # V_sample /= 65536
+    # V_sample += 0.5
+###############################
+    # print(type(V_sample))
+    # print(type(V_sample[1,1,1,1,1]))
+    # print(np.max(V_sample))
+    # print(np.min(V_sample))
+    # print(np.mean(V_sample))
+
+    for t in range(0, t2-t1+1):
         c_all = 1
-        V_sample_t = np.squeeze(V_sample[:, :, :, t, 0])
+        if(np.size(np.shape(V_sample))) > 4:
+            V_sample_t = np.squeeze(V_sample[:, :, :, t, 0])
+        else:
+            V_sample_t = np.squeeze(V_sample[:,:,:,t])
+
         if np.mean(V_sample_t) < 0:
             print("%%%"*10)
             V_sample_t = V_sample_t + 32768
@@ -292,7 +343,8 @@ def predict(model,image, startpoint, endpoint, modelCheckpointName, op_folder):
         saver.restore(sess, model_checkpoint_name)
 #---------------------------------------------------------------------------------------------------------------------------------------------
 
-    for tt in range(startpoint, endpoint+1):
+    # for tt in range(startpoint, endpoint+1):
+    for tt in range(1,endpoint-startpoint+2):
         print("\n***** Begin prediction *****")
         print("Dataset -->", pdataset.split('/')[-1])
         print("Model -->", model)
@@ -383,5 +435,15 @@ def predict(model,image, startpoint, endpoint, modelCheckpointName, op_folder):
                 nib.save(new_image, "%s/%s/%s/%s/Z0%s_class.nii" % (addrSegRes, os.path.basename(image).split('.')[0]+'_SegmentationOutput', model, tt, str(ind)))
             else:
                 nib.save(new_image, "%s/%s/%s/%s/Z%s_class.nii" % (addrSegRes, os.path.basename(image).split('.')[0]+'_SegmentationOutput', model, tt, str(ind)))
+
+    # I3dw = [512, 280, 15]
+    # I3d = [32, 35, I3dw[2]]
+    # segmentedFileName = addrSegRes+os.path.basename(image)[0]+'SegRes.nii'
+    # segImg = np.zeros((512,280,15,endpoint-startpoint+1))
+    # for it in range(1,endpoint-startpoint+1):
+    #     None
+
+
+
 
     gc.collect()
