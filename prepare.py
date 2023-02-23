@@ -54,37 +54,51 @@ def prepare(imageName, protein1Name, protein2Name):
             ttag = '00'
         elif (i < 99):
             ttag = '0'
+        if np.size(np.shape(originalImage))>4:
+            slice1 = originalImage[:, :, :, i, 0]
+            slice2 = originalImage[:, :, :, i, 1]
 
-        slice1 = originalImage[:, :, :, i, 0]
-        slice2 = originalImage[:, :, :, i, 1]
+            niftiwriteF(slice1, dirp1 + '/threeDimg_' + ttag + str(i + 1))
+            niftiwriteF(slice2, dirp2 + '/threeDimg_' + ttag + str(i + 1))
 
-        # slice1 = originalImage.slicer[:, :, :, i, 0]
-        # slice2 = originalImage.slicer[:, :, :, i, 1]
+            for j in range(0, originalImageSize[2]):
+                if (j < 9):
+                    ztag = '000'
+                elif (j < 99):
+                    ztag = '00'
+                else:
+                    ztag = '0'
 
-        niftiwriteF(slice1, dirp1 + '/threeDimg_' + ttag + str(i + 1))
-        niftiwriteF(slice2, dirp2 + '/threeDimg_' + ttag + str(i + 1))
+                tifname1 = dirp1 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
+                tifname2 = dirp2 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
 
-        # nib.save(slice1, dirp1 + '/threeDimg_' + ttag + str(i + 1))
-        # nib.save(slice2, dirp2 + '/threeDimg_' + ttag + str(i + 1))
+                Xxxx = Image.fromarray(originalImageFloat32[:, :, j, i, 0], mode='F')
+                sliceA = Image.fromarray(np.asarray(Xxxx).squeeze())
+                sliceA.save(tifname1)
+                Xxxx = Image.fromarray(originalImageFloat32[:, :, j, i, 0], mode='F')
+                sliceB = Image.fromarray(np.asarray(Xxxx).squeeze())
+                sliceB.save(tifname2)
+        else:
+            slice1 = originalImage[:, :, :, i]
 
-        for j in range(0, originalImageSize[2]):
-            if (j < 9):
-                ztag = '000'
-            elif (j < 99):
-                ztag = '00'
-            else:
-                ztag = '0'
+            niftiwriteF(slice1, dirp1 + '/threeDimg_' + ttag + str(i + 1))
 
-            tifname1 = dirp1 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
-            tifname2 = dirp2 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(j + 1) + '.tif'
+            for j in range(0, originalImageSize[2]):
+                if (j < 9):
+                    ztag = '000'
+                elif (j < 99):
+                    ztag = '00'
+                else:
+                    ztag = '0'
 
-            Xxxx = Image.fromarray(originalImageFloat32[:, :, j, i, 0], mode='F')
-            sliceA = Image.fromarray(np.asarray(Xxxx).squeeze())
-            sliceA.save(tifname1)
-            Xxxx = Image.fromarray(originalImageFloat32[:, :, j, i, 0], mode='F')
-            sliceB = Image.fromarray(np.asarray(Xxxx).squeeze())
-            sliceB.save(tifname2)
+                tifname1 = dirp1 + '/' + originalImageName + '_t' + ttag + str(i + 1) + '_z' + ztag + str(
+                    j + 1) + '.tif'
 
-    del sliceB, slice2, slice1, sliceA, originalImage, originalImageFloat32  # clear; free up some memory
-    gc.collect()
+                Xxxx = Image.fromarray(originalImageFloat32[:, :, j, i], mode='F')
+                sliceA = Image.fromarray(np.asarray(Xxxx).squeeze())
+                sliceA.save(tifname1)
+
+
+    # del sliceB, slice2, slice1, sliceA, originalImage, originalImageFloat32  # clear; free up some memory
+    # gc.collect()
     ####################################################################################################################
