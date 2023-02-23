@@ -142,8 +142,8 @@ def generateFamilyTrees(excelFile, ftFolder):
         mydf.to_csv(csvFolder+'/ft_data_tid_'+str(tid)+'.csv')
 
 
-
-    ftlst.append(set)
+    #added a tab to line just under
+        ftlst.append(set)
 
     print(np.shape(ftlst))
 
