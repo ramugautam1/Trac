@@ -289,8 +289,11 @@ def trackStep2(track_op_folder,  imageName, protein1Name, protein2Name, initialp
             threeDimg1 = niftiread(
                 imageFolder + '/3DImage/' + imageNameOnly[:-4] + '/' + protein1Name + '/threeDimg_' +
                 ttag + str(time + 1) + '.nii')
+            # threeDimg2 = niftiread(
+            #     imageFolder + '/3DImage/' + imageNameOnly[:-4] + '/' + protein2Name + '/threeDimg_' +
+            #     ttag + str(time + 1) + '.nii')
             threeDimg2 = niftiread(
-                imageFolder + '/3DImage/' + imageNameOnly[:-4] + '/' + protein2Name + '/threeDimg_' +
+                imageFolder + '/3DImage/' + imageNameOnly[:-4] + '/' + protein1Name + '/threeDimg_' +
                 ttag + str(time + 1) + '.nii')
 
             threeDimgPixelList1 = {}
