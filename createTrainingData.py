@@ -451,6 +451,7 @@ for t,image in enumerate(files):
             niftiwriteF(V_s, filename2)
 
 
++
             c_all += 1
 
 
